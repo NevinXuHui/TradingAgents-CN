@@ -71,7 +71,7 @@ class EnhancedScreeningService:
 
                 # 使用数据库优化筛选
                 result = await self._screen_with_database(
-                    conditions, limit, offset, order_by
+                    conditions, limit, offset, order_by, market
                 )
                 optimization_used = "database"
                 source = "mongodb"
@@ -159,16 +159,18 @@ class EnhancedScreeningService:
         conditions: List[ScreeningCondition],
         limit: int,
         offset: int,
-        order_by: Optional[List[Dict[str, str]]]
+        order_by: Optional[List[Dict[str, str]]],
+        market: str = "CN"
     ) -> Tuple[List[Dict[str, Any]], int]:
         """使用数据库优化筛选"""
-        logger.info("🚀 使用数据库优化筛选")
+        logger.info(f"🚀 使用数据库优化筛选, 市场: {market}")
 
         return await self.db_service.screen_stocks(
             conditions=conditions,
             limit=limit,
             offset=offset,
-            order_by=order_by
+            order_by=order_by,
+            market=market
         )
 
     async def _screen_with_traditional_method(

@@ -292,19 +292,20 @@
     <el-dialog
       v-model="showReportsDialog"
       title="📊 详细分析报告"
-      width="80%"
+      :width="isMobile ? '95%' : '80%'"
+      :fullscreen="isMobile"
       :close-on-click-modal="false"
       class="reports-dialog"
     >
-      <el-tabs v-model="activeReportTab" type="border-card">
+      <el-tabs v-model="activeReportTab" :type="isMobile ? 'card' : 'border-card'" :stretch="isMobile">
         <el-tab-pane
           v-for="(content, key) in lastAnalysis?.reports"
           :key="key"
-          :label="formatReportName(key)"
+          :label="isMobile ? formatReportNameShort(key) : formatReportName(key)"
           :name="key"
         >
           <div class="report-content">
-            <el-scrollbar height="500px">
+            <el-scrollbar :height="isMobile ? 'calc(100vh - 180px)' : '500px'">
               <div class="markdown-body" v-html="renderMarkdown(content)"></div>
             </el-scrollbar>
           </div>
@@ -312,8 +313,13 @@
       </el-tabs>
 
       <template #footer>
-        <el-button @click="showReportsDialog = false">关闭</el-button>
-        <el-button type="primary" @click="exportReport">导出报告</el-button>
+        <div class="dialog-footer">
+          <el-button @click="showReportsDialog = false">关闭</el-button>
+          <el-button type="primary" @click="exportReport">
+            <el-icon><Download /></el-icon>
+            <span class="btn-text">导出报告</span>
+          </el-button>
+        </div>
       </template>
     </el-dialog>
 
@@ -366,7 +372,7 @@
 import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { TrendCharts, Star, Refresh, Link, Document, Clock, Reading, CreditCard, Delete } from '@element-plus/icons-vue'
+import { TrendCharts, Star, Refresh, Link, Document, Clock, Reading, CreditCard, Delete, Download } from '@element-plus/icons-vue'
 import { marked } from 'marked'
 import { stocksApi } from '@/api/stocks'
 import { analysisApi } from '@/api/analysis'
@@ -389,6 +395,14 @@ echartsUse([CandlestickChart, GridComponent, TooltipComponent, DataZoomComponent
 const route = useRoute()
 const router = useRouter()
 
+// 移动端检测
+const windowWidth = ref(window.innerWidth)
+const isMobile = computed(() => windowWidth.value < 768)
+
+// 监听窗口大小变化
+const handleResize = () => {
+  windowWidth.value = window.innerWidth
+}
 
 // 分析状态
 const analysisStatus = ref<'idle' | 'running' | 'completed' | 'failed'>('idle')
@@ -731,6 +745,9 @@ async function checkFavorite() {
   }
 }
 onMounted(async () => {
+  // 监听窗口大小变化
+  window.addEventListener('resize', handleResize)
+
   // 首次加载：打通后端（并行）
   await Promise.all([
     fetchQuote(),
@@ -744,7 +761,10 @@ onMounted(async () => {
   // 每30秒刷新一次报价
   timer = setInterval(fetchQuote, 30000)
 })
-onUnmounted(() => { if (timer) clearInterval(timer) })
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
+  window.removeEventListener('resize', handleResize)
+})
 
 
 
@@ -1128,6 +1148,40 @@ function formatReportName(key: string): string {
   return nameMap[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
 }
 
+// 格式化报告名称（移动端简短版）
+function formatReportNameShort(key: string): string {
+  const shortNameMap: Record<string, string> = {
+    // 分析师团队 (4个)
+    'market_report': '📈 技术',
+    'sentiment_report': '💭 情绪',
+    'news_report': '📰 新闻',
+    'fundamentals_report': '💰 基本面',
+
+    // 研究团队 (3个)
+    'bull_researcher': '🐂 多头',
+    'bear_researcher': '🐻 空头',
+    'research_team_decision': '🔬 研究',
+
+    // 交易团队 (1个)
+    'trader_investment_plan': '💼 交易',
+
+    // 风险管理团队 (4个)
+    'risky_analyst': '⚡ 激进',
+    'safe_analyst': '🛡️ 保守',
+    'neutral_analyst': '⚖️ 中性',
+    'risk_management_decision': '👔 组合',
+
+    // 最终决策 (1个)
+    'final_trade_decision': '🎯 决策',
+
+    // 兼容旧字段
+    'investment_plan': '📋 建议',
+    'investment_debate_state': '🔬 研究',
+    'risk_debate_state': '⚖️ 风险'
+  }
+  return shortNameMap[key] || key.substring(0, 4)
+}
+
 // 渲染Markdown
 function renderMarkdown(content: string): string {
   if (!content) return '<p>暂无内容</p>'
@@ -1200,14 +1254,46 @@ function exportReport() {
 
 <style scoped lang="scss">
 .stock-detail {
-  display: flex; flex-direction: column; gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-.title { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.code { font-size: 22px; font-weight: 700; }
-.name { font-size: 18px; color: var(--el-text-color-regular); }
-.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+// 页面头部
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 8px;
+
+  .title-section {
+    .stock-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+
+      .code {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--el-text-color-primary);
+      }
+
+      .name {
+        font-size: 18px;
+        color: var(--el-text-color-regular);
+      }
+    }
+  }
+
+  .actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+}
 
 .quote-card { border-radius: 12px; }
 .quote { display: flex; flex-direction: column; gap: 8px; }
@@ -1297,12 +1383,28 @@ function exportReport() {
 }
 
 /* 报告对话框样式 */
-.reports-dialog :deep(.el-dialog__body) {
-  padding: 0;
+.reports-dialog {
+  :deep(.el-dialog__body) {
+    padding: 0;
+  }
+
+  :deep(.el-tabs__header) {
+    margin: 0;
+  }
+
+  :deep(.el-tabs__content) {
+    padding: 0;
+  }
 }
 
 .report-content {
   padding: 20px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 .markdown-body {
@@ -1525,17 +1627,20 @@ function exportReport() {
     gap: 12px;
   }
 
-  .header {
+  .page-header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 10px;
 
-    .title {
-      .code {
-        font-size: 18px;
-      }
+    .title-section {
+      .stock-title {
+        .code {
+          font-size: 20px;
+        }
 
-      .name {
-        font-size: 14px;
+        .name {
+          font-size: 14px;
+        }
       }
     }
 
@@ -1603,6 +1708,22 @@ function exportReport() {
 
   .k-chart {
     height: 240px;
+  }
+
+  .kline-container {
+    .card-hd {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+
+      .periods {
+        width: 100%;
+
+        :deep(.el-segmented) {
+          width: 100%;
+        }
+      }
+    }
   }
 
   .legend {
@@ -1729,9 +1850,57 @@ function exportReport() {
   :deep(.el-dialog) {
     width: 95% !important;
     margin: 2vh auto !important;
+    max-height: 90vh;
+
+    .el-dialog__header {
+      padding: 12px 16px;
+
+      .el-dialog__title {
+        font-size: 16px;
+      }
+    }
 
     .el-dialog__body {
-      padding: 12px;
+      padding: 0;
+      max-height: calc(90vh - 120px);
+      overflow: hidden;
+    }
+
+    .el-dialog__footer {
+      padding: 10px 16px;
+
+      .el-button {
+        padding: 8px 16px;
+        font-size: 13px;
+      }
+    }
+  }
+
+  // 报告对话框移动端特殊处理
+  .reports-dialog {
+    :deep(.el-tabs) {
+      .el-tabs__header {
+        margin: 0;
+
+        .el-tabs__nav-wrap {
+          padding: 0 8px;
+
+          .el-tabs__nav-scroll {
+            overflow-x: auto;
+          }
+
+          .el-tabs__item {
+            padding: 0 10px;
+            font-size: 12px;
+            height: 36px;
+            line-height: 36px;
+          }
+        }
+      }
+
+      .el-tabs__content {
+        padding: 0;
+      }
     }
   }
 
@@ -1739,40 +1908,92 @@ function exportReport() {
     padding: 12px;
 
     :deep(.el-scrollbar) {
-      height: 400px !important;
+      height: calc(100vh - 180px) !important;
+    }
+  }
+
+  .dialog-footer {
+    .btn-text {
+      display: none;
     }
   }
 
   .markdown-body {
     font-size: 13px;
+    line-height: 1.6;
+    padding: 0 4px;
 
-    h1 { font-size: 18px; }
-    h2 { font-size: 16px; }
-    h3 { font-size: 14px; }
+    h1 {
+      font-size: 18px;
+      margin: 16px 0 12px;
+      padding-bottom: 6px;
+    }
+    h2 {
+      font-size: 16px;
+      margin: 14px 0 10px;
+    }
+    h3 {
+      font-size: 14px;
+      margin: 12px 0 8px;
+    }
+
+    p {
+      margin: 6px 0;
+    }
+
+    ul, ol {
+      padding-left: 20px;
+      margin: 6px 0;
+    }
+
+    li {
+      margin: 3px 0;
+    }
 
     table {
       display: block;
       overflow-x: auto;
       font-size: 12px;
+      margin: 10px 0;
+
+      th, td {
+        padding: 6px 8px;
+        white-space: nowrap;
+      }
     }
 
     pre {
       font-size: 11px;
       padding: 10px;
+      margin: 8px 0;
+      overflow-x: auto;
+    }
+
+    code {
+      font-size: 11px;
+      padding: 1px 4px;
+    }
+
+    blockquote {
+      margin: 8px 0;
+      padding-left: 10px;
+      font-size: 12px;
     }
   }
 }
 
 // ==================== 小屏手机适配 (< 375px) ====================
 @media (max-width: 374px) {
-  .header {
-    .title {
-      .code {
-        font-size: 16px;
-      }
+  .page-header {
+    .title-section {
+      .stock-title {
+        .code {
+          font-size: 18px;
+        }
 
-      .name {
-        font-size: 13px;
+        .name {
+          font-size: 13px;
+        }
       }
     }
 

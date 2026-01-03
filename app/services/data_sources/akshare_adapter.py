@@ -105,6 +105,17 @@ class AKShareAdapter(DataSourceAdapter):
             df['industry'] = ''
             df['list_date'] = ''
 
+            # 获取行业分类信息
+            try:
+                logger.info("AKShare: Fetching industry classification data...")
+                industry_map = self._get_industry_map()
+                if industry_map:
+                    df['industry'] = df['symbol'].map(industry_map).fillna('')
+                    industry_count = df[df['industry'] != ''].shape[0]
+                    logger.info(f"AKShare: Successfully mapped industry for {industry_count}/{len(df)} stocks")
+            except Exception as e:
+                logger.warning(f"AKShare: Failed to fetch industry data: {e}")
+
             logger.info(f"AKShare: Successfully fetched {len(df)} stocks with real names")
             return df
 
@@ -190,6 +201,61 @@ class AKShareAdapter(DataSourceAdapter):
             return float(value)
         except (ValueError, TypeError):
             return None
+
+    def _get_industry_map(self) -> Dict[str, str]:
+        """
+        获取股票代码到行业的映射
+        通过遍历所有行业板块，获取每个行业的成分股
+        
+        Returns:
+            Dict[str, str]: {股票代码: 行业名称}
+        """
+        try:
+            import akshare as ak
+            
+            # 获取所有行业板块列表
+            industry_df = ak.stock_board_industry_name_em()
+            if industry_df is None or industry_df.empty:
+                logger.warning("AKShare: Failed to get industry list")
+                return {}
+            
+            # 获取行业名称列
+            name_col = next((c for c in ['板块名称', 'name', '行业'] if c in industry_df.columns), None)
+            if not name_col:
+                logger.warning(f"AKShare: Cannot find industry name column in {industry_df.columns.tolist()}")
+                return {}
+            
+            industry_names = industry_df[name_col].tolist()
+            logger.info(f"AKShare: Found {len(industry_names)} industries, fetching constituents...")
+            
+            # 遍历每个行业，获取成分股
+            industry_map = {}
+            success_count = 0
+            
+            for industry_name in industry_names:
+                try:
+                    # 获取该行业的成分股
+                    cons_df = ak.stock_board_industry_cons_em(symbol=industry_name)
+                    if cons_df is not None and not cons_df.empty:
+                        # 获取代码列
+                        code_col = next((c for c in ['代码', 'code', 'symbol'] if c in cons_df.columns), None)
+                        if code_col:
+                            for code in cons_df[code_col].tolist():
+                                # 确保代码是6位字符串
+                                code = str(code).zfill(6)
+                                industry_map[code] = industry_name
+                            success_count += 1
+                except Exception as e:
+                    # 单个行业获取失败不影响其他行业
+                    logger.debug(f"AKShare: Failed to get constituents for {industry_name}: {e}")
+                    continue
+            
+            logger.info(f"AKShare: Successfully fetched {success_count}/{len(industry_names)} industries, mapped {len(industry_map)} stocks")
+            return industry_map
+            
+        except Exception as e:
+            logger.error(f"AKShare: Failed to build industry map: {e}")
+            return {}
 
 
     def get_realtime_quotes(self, source: str = "eastmoney"):

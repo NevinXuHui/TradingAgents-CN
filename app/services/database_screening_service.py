@@ -122,8 +122,8 @@ class DatabaseScreeningService:
             # 🔥 根据市场类型选择不同的集合
             market_collection_map = {
                 "CN": self.collection_name,  # A股使用默认视图
-                "HK": "hk_stock_basic_info",  # 港股
-                "US": "us_stock_basic_info",  # 美股
+                "HK": "stock_basic_info_hk",  # 港股
+                "US": "stock_basic_info_us",  # 美股
             }
             collection_name = market_collection_map.get(market, self.collection_name)
             collection = db[collection_name]
@@ -158,8 +158,9 @@ class DatabaseScreeningService:
             # 构建查询条件（现在视图已包含实时行情数据，可以直接查询所有字段）
             query = await self._build_query(conditions)
 
-            # 🔥 添加数据源筛选
-            query["source"] = source
+            # 🔥 添加数据源筛选（仅A股需要，港股/美股有独立集合）
+            if market == "CN":
+                query["source"] = source
 
             logger.info(f"📋 数据库查询条件: {query}")
 

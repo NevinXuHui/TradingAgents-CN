@@ -41,7 +41,7 @@
       <el-form :model="filters" label-width="120px" class="filter-form">
         <el-row :gutter="24">
           <!-- 基础信息 -->
-          <el-col :span="8">
+          <el-col :xs="24" :sm="12" :md="8">
             <el-form-item label="市场类型">
               <el-select v-model="filters.market" placeholder="选择市场">
                 <el-option label="A股" value="A股" />
@@ -51,7 +51,7 @@
             </el-form-item>
           </el-col>
 
-          <el-col :span="8">
+          <el-col :xs="24" :sm="12" :md="8">
             <el-form-item label="行业分类">
               <el-select
                 v-model="filters.industry"
@@ -70,7 +70,7 @@
             </el-form-item>
           </el-col>
 
-          <el-col :span="8">
+          <el-col :xs="24" :sm="12" :md="8">
             <el-form-item label="市值范围">
               <el-select v-model="filters.marketCapRange" placeholder="选择市值范围">
                 <el-option label="小盘股 (< 100亿)" value="small" />
@@ -83,7 +83,7 @@
 
         <el-row :gutter="24">
           <!-- 财务指标 -->
-          <el-col :span="8">
+          <el-col :xs="24" :sm="12" :md="8">
             <el-form-item label="市盈率 (PE)">
               <el-input-number
                 v-model="filters.peRatio.min"
@@ -103,7 +103,7 @@
             </el-form-item>
           </el-col>
 
-          <el-col :span="8">
+          <el-col :xs="24" :sm="12" :md="8">
             <el-form-item label="市净率 (PB)">
               <el-input-number
                 v-model="filters.pbRatio.min"
@@ -123,7 +123,7 @@
             </el-form-item>
           </el-col>
 
-          <el-col :span="8">
+          <el-col :xs="24" :sm="12" :md="8">
             <el-form-item label="ROE (%)">
               <el-input-number
                 v-model="filters.roe.min"
@@ -148,7 +148,7 @@
 
         <el-row :gutter="24">
           <!-- 技术指标 -->
-          <el-col :span="8">
+          <el-col :xs="24" :sm="12" :md="8">
             <el-form-item label="涨跌幅 (%)">
               <el-input-number
                 v-model="filters.changePercent.min"
@@ -166,7 +166,7 @@
             </el-form-item>
           </el-col>
 
-          <el-col :span="8">
+          <el-col :xs="24" :sm="12" :md="8">
             <el-form-item label="成交量">
               <el-select v-model="filters.volumeLevel" placeholder="选择成交量水平">
                 <el-option label="活跃 (高成交量)" value="high" />
@@ -395,16 +395,16 @@ const currentDataSource = ref<{
 const fieldConfig = ref<FieldConfigResponse | null>(null)
 const fieldsLoading = ref(false)
 
-// 筛选条件
+// 筛选条件（带默认值 - 宽松条件，避免空数据导致无结果）
 const filters = reactive({
   market: 'A股',
   industry: [] as string[],
-  marketCapRange: '',
-  peRatio: { min: null, max: null },
-  pbRatio: { min: null, max: null },
-  roe: { min: null, max: null },
-  changePercent: { min: null, max: null },
-  volumeLevel: '',
+  marketCapRange: '',  // 不限制市值
+  peRatio: { min: null, max: null },  // 不限制 PE
+  pbRatio: { min: null, max: null },  // 不限制 PB
+  roe: { min: null, max: null },  // 不限制 ROE
+  changePercent: { min: -10, max: 10 },  // 默认涨跌幅 -10% 到 10%
+  volumeLevel: '',  // 成交量不设默认
   technicalPattern: [] as string[]
 })
 
@@ -438,15 +438,15 @@ const performScreening = async () => {
       children.push({ field: 'industry', op: 'in', value: filters.industry })
     }
 
-    // 市值范围映射为区间（单位：亿元 → 转换为万元以匹配后端 market_cap 单位）
+    // 市值范围映射为区间（单位：亿元，与数据库 total_mv 字段一致）
     const capRangeMap: Record<string, [number, number] | null> = {
-      small: [0, 100 * 10000], // <100亿 → < 100*1e4 万元
-      medium: [100 * 10000, 500 * 10000],
-      large: [500 * 10000, Number.MAX_SAFE_INTEGER],
+      small: [0, 100],           // 小盘股: < 100亿
+      medium: [100, 500],        // 中盘股: 100-500亿
+      large: [500, Number.MAX_SAFE_INTEGER],  // 大盘股: > 500亿
     }
     const cap = filters.marketCapRange ? capRangeMap[filters.marketCapRange] : null
     if (cap) {
-      children.push({ field: 'market_cap', op: 'between', value: cap })
+      children.push({ field: 'total_mv', op: 'between', value: cap })
     }
     // 市盈率/市净率/ROE 条件（仅当填写任一端时才拼接）
     if (filters.peRatio.min != null || filters.peRatio.max != null) {
@@ -578,11 +578,11 @@ const resetFilters = () => {
   Object.assign(filters, {
     market: 'A股',
     industry: [],
-    marketCapRange: '',
-    peRatio: { min: null, max: null },
-    pbRatio: { min: null, max: null },
-    roe: { min: null, max: null },
-    changePercent: { min: null, max: null },
+    marketCapRange: '',  // 不限制市值
+    peRatio: { min: null, max: null },  // 不限制 PE
+    pbRatio: { min: null, max: null },  // 不限制 PB
+    roe: { min: null, max: null },  // 不限制 ROE
+    changePercent: { min: -10, max: 10 },  // 默认涨跌幅 -10% 到 10%
     volumeLevel: '',
     technicalPattern: []
   })
@@ -849,6 +849,219 @@ onMounted(() => {
 
   .text-green {
     color: #67c23a;
+  }
+}
+
+/* 移动端响应式适配 */
+@media screen and (max-width: 768px) {
+  .stock-screening {
+    padding: 12px;
+
+    .page-header {
+      margin-bottom: 16px;
+
+      .page-title {
+        font-size: 18px;
+      }
+
+      .page-description {
+        font-size: 13px;
+      }
+    }
+
+    .filter-panel {
+      margin-bottom: 16px;
+
+      :deep(.el-card__header) {
+        padding: 12px 16px;
+      }
+
+      :deep(.el-card__body) {
+        padding: 12px 16px;
+      }
+
+      .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+
+        > div:first-child {
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .header-actions {
+          width: 100%;
+          justify-content: flex-end;
+        }
+      }
+
+      .filter-form {
+        :deep(.el-form-item) {
+          margin-bottom: 12px;
+        }
+
+        :deep(.el-form-item__label) {
+          width: 80px !important;
+          font-size: 13px;
+        }
+
+        :deep(.el-form-item__content) {
+          flex-wrap: wrap;
+        }
+
+        :deep(.el-select),
+        :deep(.el-input-number) {
+          width: 100% !important;
+        }
+
+        :deep(.el-input-number) {
+          width: 42% !important;
+        }
+
+        .filter-actions {
+          flex-direction: column;
+          gap: 12px;
+          margin-top: 16px;
+
+          .el-button {
+            width: 100%;
+            margin: 0;
+          }
+        }
+      }
+    }
+
+    .results-panel {
+      :deep(.el-card__header) {
+        padding: 12px 16px;
+      }
+
+      :deep(.el-card__body) {
+        padding: 0;
+      }
+
+      .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+
+        .header-actions {
+          width: 100%;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+
+          .el-button {
+            flex: 1;
+            min-width: 120px;
+          }
+        }
+      }
+
+      :deep(.el-table) {
+        font-size: 13px;
+
+        .el-table__header th {
+          padding: 8px 0;
+        }
+
+        .el-table__body td {
+          padding: 8px 4px;
+        }
+
+        /* 隐藏部分列 */
+        .el-table__cell:nth-child(4),  /* 行业 */
+        .el-table__cell:nth-child(8),  /* 市净率 */
+        .el-table__cell:nth-child(9),  /* ROE */
+        .el-table__cell:nth-child(10), /* 板块 */
+        .el-table__cell:nth-child(11)  /* 交易所 */
+        {
+          display: none;
+        }
+      }
+
+      .pagination-wrapper {
+        padding: 12px;
+        overflow-x: auto;
+
+        :deep(.el-pagination) {
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 8px;
+
+          .el-pagination__sizes,
+          .el-pagination__jump {
+            display: none;
+          }
+
+          .el-pager li {
+            min-width: 28px;
+            height: 28px;
+            line-height: 28px;
+          }
+        }
+      }
+    }
+
+    :deep(.el-empty) {
+      padding: 24px 16px;
+
+      .el-empty__image {
+        width: 120px;
+      }
+    }
+  }
+}
+
+/* 超小屏幕适配 */
+@media screen and (max-width: 480px) {
+  .stock-screening {
+    padding: 8px;
+
+    .page-header {
+      .page-title {
+        font-size: 16px;
+      }
+    }
+
+    .filter-panel {
+      .filter-form {
+        :deep(.el-form-item__label) {
+          width: 70px !important;
+          font-size: 12px;
+        }
+
+        :deep(.el-input-number) {
+          width: 40% !important;
+
+          .el-input__inner {
+            padding: 0 8px;
+          }
+        }
+      }
+    }
+
+    .results-panel {
+      :deep(.el-table) {
+        font-size: 12px;
+
+        /* 超小屏幕隐藏更多列 */
+        .el-table__cell:nth-child(7)  /* 市盈率 */
+        {
+          display: none;
+        }
+      }
+
+      .card-header {
+        .header-actions {
+          .el-button {
+            font-size: 12px;
+            padding: 8px 12px;
+          }
+        }
+      }
+    }
   }
 }
 </style>

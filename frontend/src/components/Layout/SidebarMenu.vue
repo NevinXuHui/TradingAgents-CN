@@ -5,6 +5,7 @@
     :unique-opened="true"
     router
     class="sidebar-menu"
+    @select="handleMenuSelect"
   >
     <el-menu-item index="/dashboard">
       <el-icon><Odometer /></el-icon>
@@ -119,6 +120,14 @@ const route = useRoute()
 const appStore = useAppStore()
 
 const activeMenu = computed(() => route.path)
+
+// 菜单选择时，移动端自动收起侧边栏
+const handleMenuSelect = () => {
+  // 判断是否为移动端（宽度小于768px）
+  if (window.innerWidth < 768 && !appStore.sidebarCollapsed) {
+    appStore.setSidebarCollapsed(true)
+  }
+}
 </script>
 
 <style lang="scss" scoped>

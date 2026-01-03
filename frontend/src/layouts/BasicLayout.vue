@@ -81,7 +81,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch, onMounted, onUnmounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useWindowSize } from '@vueuse/core'
 import { useAppStore } from '@/stores/app'
 import SidebarMenu from '@/components/Layout/SidebarMenu.vue'
 import UserProfile from '@/components/Layout/UserProfile.vue'
@@ -92,6 +94,7 @@ import { Expand, Fold } from '@element-plus/icons-vue'
 
 const appStore = useAppStore()
 const route = useRoute()
+const router = useRouter()
 const { width } = useWindowSize()
 
 // 需要缓存的组件
@@ -119,11 +122,13 @@ watch(width, (newWidth) => {
   }
 })
 
-// 路由变化时，移动端收起侧边栏
-watch(() => route.fullPath, () => {
-  if (isMobile.value) {
-    appStore.setSidebarCollapsed(true)
-  }
+// 使用路由守卫：路由变化后，移动端收起侧边栏
+onMounted(() => {
+  router.afterEach(() => {
+    if (isMobile.value && !appStore.sidebarCollapsed) {
+      appStore.setSidebarCollapsed(true)
+    }
+  })
 })
 </script>
 
