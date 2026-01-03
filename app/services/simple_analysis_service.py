@@ -901,10 +901,16 @@ class SimpleAnalysisService:
             def create_progress_tracker():
                 """在线程中创建进度跟踪器"""
                 logger.info(f"📊 [线程] 创建进度跟踪器: {task_id}")
+                # 安全获取 parameters 属性
+                selected_analysts = ["market", "fundamentals"]
+                research_depth = "标准"
+                if request.parameters:
+                    selected_analysts = getattr(request.parameters, 'selected_analysts', None) or ["market", "fundamentals"]
+                    research_depth = getattr(request.parameters, 'research_depth', None) or "标准"
                 tracker = RedisProgressTracker(
                     task_id=task_id,
-                    analysts=request.parameters.selected_analysts or ["market", "fundamentals"],
-                    research_depth=request.parameters.research_depth or "标准",
+                    analysts=selected_analysts,
+                    research_depth=research_depth,
                     llm_provider="dashscope"
                 )
                 logger.info(f"✅ [线程] 进度跟踪器创建完成: {task_id}")

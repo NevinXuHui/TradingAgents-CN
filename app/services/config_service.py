@@ -3883,10 +3883,10 @@ class ConfigService:
             }
 
             data = {
-                "model": "claude-3-haiku-20240307",
+                "model": "claude-haiku-4-5",
                 "max_tokens": 50,
                 "messages": [
-                    {"role": "user", "content": "你好，请简单介绍一下你自己。"}
+                    {"role": "user", "content": "Hi"}
                 ]
             }
 
