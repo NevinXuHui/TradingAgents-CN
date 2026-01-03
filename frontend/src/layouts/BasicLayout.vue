@@ -254,26 +254,155 @@ watch(() => route.fullPath, () => {
   justify-content: center;
 }
 
-// 响应式设计
-@media (max-width: 768px) {
+// ==================== 移动端响应式设计 ====================
+@media (max-width: 767px) {
   .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px !important;
+    max-width: 85vw;
     transform: translateX(-100%);
-    
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none;
+
     &:not(.collapsed) {
       transform: translateX(0);
+      box-shadow: 4px 0 16px rgba(0, 0, 0, 0.15);
     }
+
+    .sidebar-header {
+      height: 56px;
+      padding: 0 12px;
+
+      .logo {
+        gap: 8px;
+
+        img {
+          width: 28px;
+          height: 28px;
+        }
+
+        .logo-text {
+          font-size: 16px;
+        }
+      }
+    }
+
+    .sidebar-nav {
+      padding: 4px 0;
+    }
+
+    .sidebar-footer {
+      padding: 8px;
+    }
+  }
+
+  .sidebar-overlay {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
   }
 
   .main-container {
     margin-left: 0 !important;
-  }
-
-  .main-content {
-    padding: 16px;
+    min-height: 100vh;
+    min-height: 100dvh; // 动态视口高度，适配移动端地址栏
   }
 
   .header {
-    padding: 0 16px;
+    height: 56px;
+    padding: 0 12px;
+    position: sticky;
+    top: 0;
+
+    .header-left {
+      gap: 8px;
+
+      .sidebar-toggle {
+        width: 40px;
+        height: 40px;
+        padding: 8px;
+
+        .el-icon {
+          font-size: 20px;
+        }
+      }
+    }
+
+    .header-right {
+      gap: 4px;
+    }
+  }
+
+  .main-content {
+    padding: 12px;
+    min-height: calc(100vh - 56px - 50px);
+    min-height: calc(100dvh - 56px - 50px);
+
+    .content-wrapper {
+      max-width: 100%;
+    }
+  }
+
+  .footer {
+    height: 50px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+}
+
+// ==================== 平板端响应式设计 ====================
+@media (min-width: 768px) and (max-width: 991px) {
+  .sidebar {
+    width: 200px !important;
+
+    &.collapsed {
+      width: 64px !important;
+    }
+
+    .sidebar-header {
+      padding: 0 12px;
+
+      .logo-text {
+        font-size: 16px;
+      }
+    }
+  }
+
+  .main-content {
+    padding: 20px;
+
+    .content-wrapper {
+      max-width: 100%;
+    }
+  }
+
+  .header {
+    padding: 0 20px;
+  }
+}
+
+// ==================== 小屏手机优化 (< 375px) ====================
+@media (max-width: 374px) {
+  .sidebar {
+    width: 260px !important;
+  }
+
+  .header {
+    padding: 0 8px;
+
+    .header-left {
+      gap: 4px;
+    }
+  }
+
+  .main-content {
+    padding: 8px;
+  }
+
+  .footer {
+    height: 44px;
+    font-size: 11px;
   }
 }
 

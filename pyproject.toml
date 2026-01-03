@@ -76,6 +76,7 @@ dependencies = [
 
     # 工具和辅助
     "psutil>=6.1.0",
+    "pypinyin>=0.50.0",  # 中文拼音转换，支持股票名称拼音搜索
     "python-dotenv>=1.0.0",
     "pytz>=2025.2",
     "questionary>=2.1.0",

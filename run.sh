@@ -25,7 +25,19 @@ cd "$PROJECT_DIR"
 # 默认配置
 ACTION="start"
 TARGET="all"
-BACKEND_PORT=8000
+
+# 从 .env 文件读取端口配置（如果存在）
+if [ -f ".env" ]; then
+    # 读取 PORT 配置（后端端口）
+    ENV_PORT=$(grep -E "^PORT=" .env 2>/dev/null | cut -d'=' -f2 | tr -d ' \r\n')
+    if [ -n "$ENV_PORT" ]; then
+        BACKEND_PORT=$ENV_PORT
+    else
+        BACKEND_PORT=8084
+    fi
+else
+    BACKEND_PORT=8084
+fi
 FRONTEND_PORT=5173
 
 show_help() {

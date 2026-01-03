@@ -7,6 +7,7 @@
 1. 跨市场数据访问（A股/港股/美股）
 2. 多数据源优先级查询
 3. 统一的查询接口
+4. 支持拼音缩写搜索（如 "payh" 搜索 "平安银行"）
 
 设计说明：
 - 参考A股多数据源设计
@@ -16,8 +17,16 @@
 """
 
 import logging
+import re
 from typing import Dict, List, Optional
 from motor.motor_asyncio import AsyncIOMotorDatabase
+
+# 拼音转换支持
+try:
+    from pypinyin import lazy_pinyin, Style
+    PINYIN_AVAILABLE = True
+except ImportError:
+    PINYIN_AVAILABLE = False
 
 logger = logging.getLogger("webapi")
 

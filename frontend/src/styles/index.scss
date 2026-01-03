@@ -87,15 +87,214 @@ h6 {
   justify-content: space-between;
 }
 
+// ==================== 响应式断点定义 ====================
+// xs: 0-575px (手机竖屏)
+// sm: 576-767px (手机横屏)
+// md: 768-991px (平板)
+// lg: 992-1199px (小桌面)
+// xl: 1200px+ (大桌面)
+
 // 响应式工具类
-@media (max-width: 768px) {
-  .mobile-hidden {
-    display: none !important;
+@media (max-width: 575px) {
+  .xs-hidden { display: none !important; }
+}
+
+@media (max-width: 767px) {
+  .mobile-hidden { display: none !important; }
+}
+
+@media (min-width: 768px) {
+  .desktop-hidden { display: none !important; }
+}
+
+@media (min-width: 576px) and (max-width: 767px) {
+  .sm-only { display: block !important; }
+}
+
+// ==================== 移动端全局优化 ====================
+@media (max-width: 767px) {
+  // 优化触摸目标大小（最小44px）
+  .el-button {
+    min-height: 44px;
+    padding: 10px 16px;
+  }
+
+  .el-button--small {
+    min-height: 36px;
+    padding: 8px 12px;
+  }
+
+  // 优化输入框
+  .el-input__inner,
+  .el-textarea__inner {
+    font-size: 16px !important; // 防止iOS自动缩放
+  }
+
+  // 优化表格在移动端的显示
+  .el-table {
+    font-size: 13px;
+
+    .el-table__header th {
+      padding: 8px 4px;
+    }
+
+    .el-table__body td {
+      padding: 8px 4px;
+    }
+
+    // 隐藏不重要的列
+    .mobile-hide-col {
+      display: none !important;
+    }
+  }
+
+  // 优化卡片间距
+  .el-card {
+    margin-bottom: 12px;
+
+    .el-card__header {
+      padding: 12px 16px;
+    }
+
+    .el-card__body {
+      padding: 12px 16px;
+    }
+  }
+
+  // 优化对话框
+  .el-dialog {
+    width: 92% !important;
+    max-width: 92% !important;
+    margin: 4vh auto !important;
+
+    .el-dialog__header {
+      padding: 16px;
+    }
+
+    .el-dialog__body {
+      padding: 16px;
+    }
+
+    .el-dialog__footer {
+      padding: 12px 16px;
+    }
+  }
+
+  // 优化抽屉
+  .el-drawer {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  // 优化下拉菜单
+  .el-dropdown-menu {
+    min-width: 140px;
+  }
+
+  // 优化标签页
+  .el-tabs__nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .el-tabs__item {
+    padding: 0 12px;
+    font-size: 14px;
+  }
+
+  // 优化分页
+  .el-pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+
+    .el-pagination__sizes,
+    .el-pagination__jump {
+      display: none;
+    }
+  }
+
+  // 优化表单
+  .el-form-item {
+    margin-bottom: 16px;
+
+    .el-form-item__label {
+      padding-bottom: 4px;
+    }
+  }
+
+  // 优化消息提示位置
+  .el-message {
+    min-width: auto;
+    max-width: 90%;
+  }
+
+  // 优化通知位置
+  .el-notification {
+    width: calc(100% - 32px) !important;
+    left: 16px !important;
+    right: 16px !important;
+  }
+
+  // 优化 Row/Col 间距
+  .el-row {
+    margin-left: -8px !important;
+    margin-right: -8px !important;
+
+    .el-col {
+      padding-left: 8px !important;
+      padding-right: 8px !important;
+    }
+  }
+
+  // 移动端栅格：所有列默认全宽
+  .el-col-xs-24 {
+    flex: 0 0 100%;
+    max-width: 100%;
   }
 }
 
-@media (min-width: 769px) {
-  .desktop-hidden {
-    display: none !important;
+// ==================== 平板端优化 ====================
+@media (min-width: 768px) and (max-width: 991px) {
+  .el-dialog {
+    width: 80% !important;
+    max-width: 600px !important;
+  }
+
+  .el-drawer {
+    width: 400px !important;
+  }
+}
+
+// ==================== 安全区域适配（刘海屏等） ====================
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+// ==================== 触摸优化 ====================
+@media (hover: none) and (pointer: coarse) {
+  // 触摸设备上移除hover效果的延迟
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  // 增大可点击区域
+  .clickable,
+  [role="button"],
+  button,
+  a {
+    min-height: 44px;
+    min-width: 44px;
   }
 }

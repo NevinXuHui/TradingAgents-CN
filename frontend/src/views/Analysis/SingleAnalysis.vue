@@ -19,7 +19,7 @@
     <div class="analysis-container">
       <el-row :gutter="24">
         <!-- 左侧：基础配置 -->
-        <el-col :span="18">
+        <el-col :xs="24" :sm="24" :md="18" :lg="18" :xl="18">
           <el-card class="main-form-card" shadow="hover">
             <template #header>
               <div class="card-header">
@@ -33,7 +33,7 @@
               <div class="form-section">
                 <h4 class="section-title">📊 股票信息</h4>
                 <el-row :gutter="16">
-                  <el-col :span="12">
+                  <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12">
                     <el-form-item label="股票代码" required>
                       <el-input
                         v-model="analysisForm.stockCode"
@@ -59,7 +59,7 @@
                       </div>
                     </el-form-item>
                   </el-col>
-                  <el-col :span="12">
+                  <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12">
                     <el-form-item label="市场类型">
                       <el-select
                         v-model="analysisForm.market"
@@ -3396,6 +3396,398 @@ onMounted(async () => {
     font-size: 14px;
     line-height: 1.6;
     color: #e6a23c;
+  }
+}
+
+/* ==================== 移动端响应式设计 ==================== */
+@media (max-width: 767px) {
+  .single-analysis {
+    padding: 12px;
+
+    .page-header {
+      margin-bottom: 16px;
+
+      .header-content {
+        padding: 20px 16px;
+        border-radius: 12px;
+      }
+
+      .title-section {
+        .page-title {
+          font-size: 22px;
+
+          .title-icon {
+            margin-right: 8px;
+          }
+        }
+
+        .page-description {
+          font-size: 14px;
+        }
+      }
+    }
+
+    .analysis-container {
+      .main-form-card, .config-card {
+        border-radius: 12px;
+
+        :deep(.el-card__header) {
+          padding: 16px;
+          border-radius: 12px 12px 0 0;
+        }
+
+        :deep(.el-card__body) {
+          padding: 16px;
+        }
+      }
+
+      .form-section {
+        margin-bottom: 20px;
+
+        .section-title {
+          font-size: 15px;
+          margin-bottom: 12px;
+        }
+      }
+
+      /* 深度选择器移动端优化 */
+      .depth-selector {
+        flex-direction: column;
+        gap: 10px;
+
+        .depth-option {
+          padding: 14px 12px;
+
+          .depth-icon {
+            font-size: 24px;
+          }
+
+          .depth-info {
+            .depth-name {
+              font-size: 14px;
+            }
+
+            .depth-desc {
+              font-size: 12px;
+            }
+
+            .depth-time {
+              font-size: 11px;
+            }
+          }
+        }
+      }
+
+      /* 分析师网格移动端优化 */
+      .analysts-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+
+        .analyst-card {
+          padding: 12px;
+
+          .analyst-avatar {
+            width: 36px;
+            height: 36px;
+          }
+
+          .analyst-content {
+            .analyst-name {
+              font-size: 14px;
+            }
+
+            .analyst-desc {
+              font-size: 12px;
+            }
+          }
+        }
+      }
+
+      /* 操作按钮移动端优化 */
+      .action-buttons {
+        flex-direction: column;
+        gap: 12px;
+
+        .el-button {
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: auto !important;
+        }
+      }
+
+      .large-analysis-btn.el-button {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: auto !important;
+        height: 52px !important;
+        font-size: 16px !important;
+      }
+    }
+
+    /* 进度区域移动端优化 */
+    .progress-stats {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+
+      .stat-item {
+        padding: 10px 8px;
+
+        .stat-label {
+          font-size: 11px;
+        }
+
+        .stat-value {
+          font-size: 13px;
+        }
+      }
+    }
+
+    .current-task-info {
+      padding: 12px;
+
+      .task-title {
+        font-size: 14px;
+      }
+
+      .task-description {
+        font-size: 13px;
+      }
+    }
+
+    .analysis-steps {
+      padding: 14px;
+
+      .steps-title {
+        font-size: 14px;
+      }
+
+      .steps-container {
+        max-height: 250px;
+      }
+    }
+
+    .step-item {
+      padding: 10px 0;
+      margin-left: 12px;
+
+      .step-icon {
+        width: 24px;
+        height: 24px;
+        margin-left: -14px;
+        margin-right: 12px;
+        font-size: 12px;
+      }
+
+      .step-title {
+        font-size: 13px;
+      }
+
+      .step-description {
+        font-size: 11px;
+      }
+    }
+
+    /* 结果区域移动端优化 */
+    .results-section {
+      margin-top: 16px;
+    }
+
+    .decision-card {
+      padding: 14px;
+
+      .decision-main {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .decision-metrics {
+        flex-wrap: wrap;
+        gap: 12px;
+        justify-content: center;
+      }
+    }
+
+    .result-actions {
+      flex-direction: column;
+      gap: 10px;
+
+      .el-button {
+        width: 100%;
+      }
+    }
+
+    /* 分析报告标签页移动端优化 */
+    .analysis-tabs {
+      :deep(.el-tabs__header) {
+        padding: 8px;
+        border-radius: 10px;
+      }
+
+      :deep(.el-tabs__nav) {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+
+        &::-webkit-scrollbar {
+          display: none;
+        }
+      }
+
+      :deep(.el-tabs__item) {
+        height: 44px !important;
+        line-height: 44px !important;
+        padding: 0 12px !important;
+        margin-right: 6px !important;
+        font-size: 13px !important;
+        border-radius: 8px !important;
+        white-space: nowrap;
+      }
+    }
+
+    .report-header {
+      padding: 14px;
+
+      .report-title {
+        .report-icon {
+          font-size: 20px;
+          margin-right: 8px;
+        }
+
+        .report-name {
+          font-size: 16px;
+        }
+      }
+
+      .report-description {
+        font-size: 13px;
+        margin-left: 28px;
+      }
+    }
+
+    .report-content-wrapper {
+      padding: 14px;
+    }
+
+    .report-content {
+      font-size: 14px;
+
+      h1 { font-size: 20px !important; }
+      h2 { font-size: 18px !important; }
+      h3 { font-size: 16px !important; }
+      h4 { font-size: 15px !important; }
+
+      p {
+        margin: 10px 0 !important;
+      }
+
+      ul, ol {
+        padding-left: 20px !important;
+      }
+    }
+  }
+}
+
+/* ==================== 平板端响应式设计 ==================== */
+@media (min-width: 768px) and (max-width: 991px) {
+  .single-analysis {
+    padding: 20px;
+
+    .page-header {
+      .header-content {
+        padding: 24px;
+      }
+
+      .title-section {
+        .page-title {
+          font-size: 26px;
+        }
+      }
+    }
+
+    .analysis-container {
+      .depth-selector {
+        .depth-option {
+          padding: 14px;
+        }
+      }
+
+      .analysts-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  }
+}
+
+/* ==================== 小屏手机优化 (< 375px) ==================== */
+@media (max-width: 374px) {
+  .single-analysis {
+    padding: 8px;
+
+    .page-header {
+      .header-content {
+        padding: 16px 12px;
+      }
+
+      .title-section {
+        .page-title {
+          font-size: 20px;
+        }
+
+        .page-description {
+          font-size: 13px;
+        }
+      }
+    }
+
+    .analysis-container {
+      .form-section {
+        .section-title {
+          font-size: 14px;
+        }
+      }
+
+      .depth-selector {
+        .depth-option {
+          padding: 12px 10px;
+
+          .depth-info {
+            .depth-name {
+              font-size: 13px;
+            }
+          }
+        }
+      }
+
+      .analysts-grid {
+        .analyst-card {
+          padding: 10px;
+
+          .analyst-avatar {
+            width: 32px;
+            height: 32px;
+          }
+        }
+      }
+
+      .large-analysis-btn.el-button {
+        height: 48px !important;
+        font-size: 15px !important;
+      }
+    }
+
+    .progress-stats {
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .analysis-tabs {
+      :deep(.el-tabs__item) {
+        height: 40px !important;
+        line-height: 40px !important;
+        padding: 0 10px !important;
+        font-size: 12px !important;
+      }
+    }
   }
 }
 </style>

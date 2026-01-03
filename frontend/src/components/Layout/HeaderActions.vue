@@ -163,4 +163,75 @@ function showHelp() {
 .notif-item .title:hover { text-decoration: underline; }
 .notif-item .content { font-size: 12px; color: var(--el-text-color-regular); }
 .notif-item .ops { display: flex; gap: 8px; margin-top: 6px; }
+
+// ==================== 移动端响应式设计 ====================
+@media (max-width: 767px) {
+  .header-actions {
+    gap: 2px;
+
+    .action-btn {
+      width: 40px;
+      height: 40px;
+      padding: 8px;
+
+      .el-icon {
+        font-size: 20px;
+      }
+    }
+
+    // 移动端隐藏全屏按钮（移动端无意义）
+    .action-btn:nth-child(2) {
+      display: none;
+    }
+  }
+
+  // 通知抽屉移动端优化
+  .notif-toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .notif-item {
+    padding: 12px 10px;
+
+    .title {
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .content {
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .ops {
+      margin-top: 10px;
+
+      .el-button {
+        padding: 8px 12px;
+      }
+    }
+  }
+}
+
+// ==================== 小屏手机优化 ====================
+@media (max-width: 374px) {
+  .header-actions {
+    gap: 0;
+
+    .action-btn {
+      width: 36px;
+      height: 36px;
+
+      .el-icon {
+        font-size: 18px;
+      }
+    }
+
+    // 小屏隐藏帮助按钮
+    .action-btn:nth-child(4) {
+      display: none;
+    }
+  }
+}
 </style>

@@ -21,44 +21,58 @@ logger = logging.getLogger(__name__)
 try:
     import markdown
     import pypandoc
-
-    # 检查 pandoc 是否可用
-    try:
-        pypandoc.get_pandoc_version()
-        PANDOC_AVAILABLE = True
-        logger.info("✅ Pandoc 可用")
-    except OSError:
-        PANDOC_AVAILABLE = False
-        logger.warning("⚠️ Pandoc 不可用，Word 和 PDF 导出功能将不可用")
-
     EXPORT_AVAILABLE = True
 except ImportError as e:
     EXPORT_AVAILABLE = False
-    PANDOC_AVAILABLE = False
     logger.warning(f"⚠️ 导出功能依赖包缺失: {e}")
     logger.info("💡 请安装: pip install pypandoc markdown")
 
-# 检查 pdfkit（唯一的 PDF 生成工具）
-PDFKIT_AVAILABLE = False
-PDFKIT_ERROR = None
 
-try:
-    import pdfkit
-    # 检查 wkhtmltopdf 是否安装
+def _check_pandoc_available() -> bool:
+    """动态检查 pandoc 是否可用（每次调用时检测）"""
+    if not EXPORT_AVAILABLE:
+        return False
     try:
+        import pypandoc
+        import os
+
+        # 确保 PATH 包含常见的 pandoc 安装路径
+        current_path = os.environ.get('PATH', '')
+        pandoc_paths = ['/usr/bin', '/usr/local/bin', '/bin']
+        for p in pandoc_paths:
+            if p not in current_path:
+                os.environ['PATH'] = f"{p}:{current_path}"
+                current_path = os.environ['PATH']
+
+        pypandoc.get_pandoc_version()
+        return True
+    except (OSError, Exception):
+        return False
+
+
+# 初始检测（仅用于日志）
+PANDOC_AVAILABLE = _check_pandoc_available()
+if PANDOC_AVAILABLE:
+    logger.info("✅ Pandoc 可用")
+else:
+    logger.warning("⚠️ Pandoc 不可用，Word 和 PDF 导出功能将不可用")
+
+def _check_pdfkit_available() -> bool:
+    """动态检查 pdfkit + wkhtmltopdf 是否可用"""
+    try:
+        import pdfkit
         pdfkit.configuration()
-        PDFKIT_AVAILABLE = True
-        logger.info("✅ pdfkit + wkhtmltopdf 可用（PDF 生成工具）")
-    except Exception as e:
-        PDFKIT_ERROR = str(e)
-        logger.warning("⚠️ wkhtmltopdf 未安装，PDF 导出功能不可用")
-        logger.info("💡 安装方法: https://wkhtmltopdf.org/downloads.html")
-except ImportError:
-    logger.warning("⚠️ pdfkit 未安装，PDF 导出功能不可用")
-    logger.info("💡 安装方法: pip install pdfkit")
-except Exception as e:
-    PDFKIT_ERROR = str(e)
-    logger.warning(f"⚠️ pdfkit 检测失败: {e}")
+        return True
+    except Exception:
+        return False
+
+
+# 初始检测（仅用于日志）
+PDFKIT_AVAILABLE = _check_pdfkit_available()
+if PDFKIT_AVAILABLE:
+    logger.info("✅ pdfkit + wkhtmltopdf 可用（PDF 生成工具）")
+else:
+    logger.warning("⚠️ wkhtmltopdf 未安装，PDF 导出功能不可用")
 
 
 class ReportExporter:
@@ -66,13 +80,17 @@ class ReportExporter:
 
     def __init__(self):
         self.export_available = EXPORT_AVAILABLE
-        self.pandoc_available = PANDOC_AVAILABLE
-        self.pdfkit_available = PDFKIT_AVAILABLE
+        logger.info("📋 ReportExporter 初始化")
 
-        logger.info("📋 ReportExporter 初始化:")
-        logger.info(f"  - export_available: {self.export_available}")
-        logger.info(f"  - pandoc_available: {self.pandoc_available}")
-        logger.info(f"  - pdfkit_available: {self.pdfkit_available}")
+    @property
+    def pandoc_available(self) -> bool:
+        """动态检测 pandoc 是否可用"""
+        return _check_pandoc_available()
+
+    @property
+    def pdfkit_available(self) -> bool:
+        """动态检测 pdfkit 是否可用"""
+        return _check_pdfkit_available()
     
     def generate_markdown_report(self, report_doc: Dict[str, Any]) -> str:
         """生成 Markdown 格式报告"""

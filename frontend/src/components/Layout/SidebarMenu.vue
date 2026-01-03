@@ -137,4 +137,46 @@ const activeMenu = computed(() => route.path)
     color: var(--el-color-primary);
   }
 }
+
+// ==================== 移动端响应式设计 ====================
+@media (max-width: 767px) {
+  .sidebar-menu {
+    :deep(.el-menu-item),
+    :deep(.el-sub-menu__title) {
+      height: 52px;
+      line-height: 52px;
+      font-size: 15px;
+      padding-left: 16px !important;
+      padding-right: 16px !important;
+    }
+
+    :deep(.el-sub-menu .el-menu-item) {
+      height: 48px;
+      line-height: 48px;
+      padding-left: 48px !important;
+    }
+
+    :deep(.el-menu-item .el-icon),
+    :deep(.el-sub-menu__title .el-icon) {
+      font-size: 20px;
+      margin-right: 12px;
+    }
+
+    :deep(.el-sub-menu__icon-arrow) {
+      font-size: 14px;
+    }
+  }
+}
+
+// ==================== 平板端响应式设计 ====================
+@media (min-width: 768px) and (max-width: 991px) {
+  .sidebar-menu {
+    :deep(.el-menu-item),
+    :deep(.el-sub-menu__title) {
+      height: 44px;
+      line-height: 44px;
+      font-size: 14px;
+    }
+  }
+}
 </style>

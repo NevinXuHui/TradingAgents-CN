@@ -511,9 +511,13 @@ async def download_report(
 
         elif format == "docx":
             # Word 文档格式下载
-            from app.utils.report_exporter import report_exporter
+            from app.utils.report_exporter import report_exporter, _check_pandoc_available
 
-            if not report_exporter.pandoc_available:
+            # 动态检测 pandoc
+            pandoc_ok = _check_pandoc_available()
+            logger.info(f"📄 Word 导出 - pandoc 检测结果: {pandoc_ok}")
+
+            if not pandoc_ok:
                 raise HTTPException(
                     status_code=400,
                     detail="Word 导出功能不可用。请安装 pandoc: pip install pypandoc"
@@ -539,9 +543,14 @@ async def download_report(
 
         elif format == "pdf":
             # PDF 格式下载
-            from app.utils.report_exporter import report_exporter
+            from app.utils.report_exporter import report_exporter, _check_pandoc_available, _check_pdfkit_available
 
-            if not report_exporter.pandoc_available:
+            # 动态检测
+            pandoc_ok = _check_pandoc_available()
+            pdfkit_ok = _check_pdfkit_available()
+            logger.info(f"📄 PDF 导出 - pandoc: {pandoc_ok}, pdfkit: {pdfkit_ok}")
+
+            if not pandoc_ok and not pdfkit_ok:
                 raise HTTPException(
                     status_code=400,
                     detail="PDF 导出功能不可用。请安装 pandoc 和 PDF 引擎（wkhtmltopdf 或 LaTeX）"

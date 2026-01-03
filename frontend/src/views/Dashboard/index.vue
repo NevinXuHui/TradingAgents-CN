@@ -54,7 +54,7 @@
     <!-- 主要功能区域 -->
     <el-row :gutter="24" class="main-content">
       <!-- 左侧：快速操作 -->
-      <el-col :span="16">
+      <el-col :xs="24" :sm="24" :md="16" :lg="16" :xl="16">
         <el-card class="quick-actions-card" header="快速操作">
           <div class="quick-actions">
             <div class="action-item" @click="goToSingleAnalysis">
@@ -168,7 +168,7 @@
       </el-col>
 
       <!-- 右侧：自选股和快讯 -->
-      <el-col :span="8">
+      <el-col :xs="24" :sm="24" :md="8" :lg="8" :xl="8">
         <!-- 我的自选股 -->
         <el-card class="favorites-card">
           <template #header>
@@ -1035,27 +1035,92 @@ onMounted(async () => {
   }
 }
 
-// 响应式设计
-@media (max-width: 768px) {
+// ==================== 移动端响应式设计 ====================
+@media (max-width: 767px) {
   .dashboard {
     .welcome-section {
       flex-direction: column;
       text-align: center;
-      gap: 24px;
+      gap: 20px;
+      padding: 24px 16px;
+      border-radius: 8px;
+
+      .welcome-content {
+        .welcome-title {
+          font-size: 22px;
+          flex-direction: column;
+          gap: 8px;
+
+          .version-badge {
+            font-size: 12px;
+            padding: 2px 10px;
+          }
+        }
+
+        .welcome-subtitle {
+          font-size: 14px;
+          line-height: 1.5;
+        }
+      }
 
       .welcome-actions {
         justify-content: center;
+        flex-wrap: wrap;
+        gap: 12px;
+
+        .el-button {
+          flex: 1;
+          min-width: 120px;
+          max-width: 160px;
+        }
       }
     }
 
     .learning-highlight-card {
+      margin-bottom: 16px;
+
       .learning-highlight {
         flex-direction: column;
         text-align: center;
+        gap: 16px;
+        padding: 4px;
+
+        .learning-icon {
+          width: 60px;
+          height: 60px;
+
+          .el-icon {
+            font-size: 32px !important;
+          }
+        }
 
         .learning-content {
+          h2 {
+            font-size: 18px;
+            margin-bottom: 8px;
+          }
+
+          p {
+            font-size: 13px;
+            margin-bottom: 12px;
+          }
+
           .learning-features {
             justify-content: center;
+            gap: 6px;
+
+            .feature-tag {
+              font-size: 12px;
+              padding: 3px 8px;
+            }
+          }
+        }
+
+        .learning-action {
+          width: 100%;
+
+          .el-button {
+            width: 100%;
           }
         }
       }
@@ -1063,7 +1128,204 @@ onMounted(async () => {
 
     .main-content {
       .el-col {
-        margin-bottom: 24px;
+        margin-bottom: 16px;
+      }
+    }
+
+    .quick-actions-card {
+      .quick-actions {
+        gap: 12px;
+
+        .action-item {
+          padding: 16px 12px;
+
+          .action-icon {
+            width: 36px;
+            height: 36px;
+            font-size: 18px;
+          }
+
+          .action-content {
+            h3 {
+              font-size: 15px;
+            }
+
+            p {
+              font-size: 13px;
+            }
+          }
+        }
+      }
+    }
+
+    .recent-analyses-card {
+      // 移动端表格优化
+      :deep(.el-table) {
+        font-size: 13px;
+
+        .el-table__header th,
+        .el-table__body td {
+          padding: 8px 4px;
+        }
+      }
+
+      .table-footer {
+        margin-top: 12px;
+      }
+    }
+
+    .favorites-card,
+    .paper-trading-card {
+      .favorites-list {
+        .favorite-item {
+          padding: 10px 0;
+
+          .stock-info {
+            .stock-code {
+              font-size: 13px;
+            }
+
+            .stock-name {
+              font-size: 11px;
+            }
+          }
+
+          .stock-price {
+            .current-price {
+              font-size: 13px;
+            }
+
+            .change-percent {
+              font-size: 11px;
+            }
+          }
+        }
+      }
+    }
+
+    .paper-trading-card {
+      .paper-account-info {
+        gap: 12px;
+
+        .account-section {
+          padding: 10px;
+
+          .account-section-title {
+            font-size: 13px;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+          }
+
+          .account-item {
+            padding: 6px 0;
+
+            .account-label {
+              font-size: 12px;
+            }
+
+            .account-value {
+              font-size: 14px;
+
+              &.primary {
+                font-size: 15px;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .market-news-card {
+      .news-list {
+        .news-item {
+          padding: 10px 0;
+
+          .news-title {
+            font-size: 13px;
+            line-height: 1.5;
+          }
+
+          .news-time {
+            font-size: 11px;
+          }
+        }
+      }
+    }
+  }
+}
+
+// ==================== 平板端响应式设计 ====================
+@media (min-width: 768px) and (max-width: 991px) {
+  .dashboard {
+    .welcome-section {
+      padding: 32px;
+
+      .welcome-content {
+        .welcome-title {
+          font-size: 26px;
+        }
+      }
+    }
+
+    .learning-highlight-card {
+      .learning-highlight {
+        gap: 20px;
+
+        .learning-icon {
+          width: 70px;
+          height: 70px;
+        }
+      }
+    }
+
+    .quick-actions-card {
+      .quick-actions {
+        .action-item {
+          padding: 16px;
+        }
+      }
+    }
+  }
+}
+
+// ==================== 小屏手机优化 (< 375px) ====================
+@media (max-width: 374px) {
+  .dashboard {
+    .welcome-section {
+      padding: 20px 12px;
+
+      .welcome-content {
+        .welcome-title {
+          font-size: 20px;
+        }
+
+        .welcome-subtitle {
+          font-size: 13px;
+        }
+      }
+
+      .welcome-actions {
+        .el-button {
+          min-width: 100px;
+          font-size: 13px;
+        }
+      }
+    }
+
+    .learning-highlight-card {
+      .learning-highlight {
+        .learning-content {
+          h2 {
+            font-size: 16px;
+          }
+
+          .learning-features {
+            .feature-tag {
+              font-size: 11px;
+              padding: 2px 6px;
+            }
+          }
+        }
       }
     }
   }
