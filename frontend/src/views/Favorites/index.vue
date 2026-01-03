@@ -316,21 +316,18 @@
         </el-form-item>
 
         <el-form-item label="股票代码" prop="stock_code">
-          <el-input
+          <StockSearchInput
             v-model="addForm.stock_code"
+            :market="addForm.market"
+            size="default"
             :placeholder="getStockCodePlaceholder()"
-            @blur="fetchStockInfo"
+            @select="onStockSelect"
+            @market-change="onAutoMarketChange"
           />
-          <div style="font-size: 12px; color: #909399; margin-top: 4px;">
-            {{ getStockCodeHint() }}
-          </div>
         </el-form-item>
 
         <el-form-item label="股票名称" prop="stock_name">
-          <el-input v-model="addForm.stock_name" placeholder="股票名称" />
-          <div v-if="addForm.market !== 'A股'" style="font-size: 12px; color: #E6A23C; margin-top: 4px;">
-            {{ addForm.market }}不支持自动获取，请手动输入股票名称
-          </div>
+          <el-input v-model="addForm.stock_name" placeholder="股票名称（选择股票后自动填充）" />
         </el-form-item>
 
         <el-form-item label="标签">
@@ -595,6 +592,8 @@ import { tagsApi } from '@/api/tags'
 import { stockSyncApi } from '@/api/stockSync'
 import { normalizeMarketForAnalysis } from '@/utils/market'
 import { ApiClient } from '@/api/request'
+import StockSearchInput from '@/components/StockSearchInput.vue'
+import type { StockInfo } from '@/api/multiMarket'
 
 import type { FavoriteItem } from '@/api/favorites'
 import { useAuthStore } from '@/stores/auth'
@@ -962,56 +961,41 @@ const handleMarketChange = () => {
 const getStockCodePlaceholder = () => {
   const market = addForm.value.market
   if (market === 'A股') {
-    return '请输入6位数字代码，如：000001'
+    return '输入代码、名称或拼音（如：000001、平安银行、payh）'
   } else if (market === '港股') {
-    return '请输入4位数字代码，如：0700'
+    return '输入股票代码或名称（如：00700、腾讯）'
   } else if (market === '美股') {
-    return '请输入股票代码，如：AAPL'
+    return '输入股票代码或名称（如：AAPL、Apple）'
   }
-  return '请输入股票代码'
+  return '输入股票代码或名称'
 }
 
-// 获取股票代码输入提示文字
-const getStockCodeHint = () => {
-  const market = addForm.value.market
-  if (market === 'A股') {
-    return '输入代码后失焦，将自动填充股票名称'
-  } else if (market === '港股') {
-    return '港股不支持自动获取名称，请手动输入'
-  } else if (market === '美股') {
-    return '美股不支持自动获取名称，请手动输入'
+// 股票选择回调
+const onStockSelect = (stock: StockInfo) => {
+  console.log('选中股票:', stock)
+  addForm.value.stock_code = stock.code
+  addForm.value.stock_name = stock.name
+  // 清除验证错误
+  if (addFormRef.value) {
+    addFormRef.value.clearValidate(['stock_code', 'stock_name'])
   }
+}
+
+// 自动市场变更回调
+const onAutoMarketChange = (market: string) => {
+  if (market !== addForm.value.market) {
+    addForm.value.market = market
+    ElMessage.success(`已自动切换到${market}`)
+  }
+}
+
+// 获取股票代码输入提示文字（保留兼容）
+const getStockCodeHint = () => {
   return ''
 }
 
 const fetchStockInfo = async () => {
-  if (!addForm.value.stock_code) return
-
-  try {
-    const symbol = addForm.value.stock_code.trim()
-    const market = addForm.value.market
-
-    // 🔥 只有A股支持自动获取股票名称
-    if (market === 'A股') {
-      // 从后台获取股票基础信息
-      const res = await ApiClient.get(`/api/stock-data/basic-info/${symbol}`)
-
-      if ((res as any)?.success && (res as any)?.data) {
-        const stockInfo = (res as any).data
-        // 自动填充股票名称
-        if (stockInfo.name) {
-          addForm.value.stock_name = stockInfo.name
-          ElMessage.success(`已自动填充股票名称: ${stockInfo.name}`)
-        }
-      } else {
-        ElMessage.warning('未找到该股票信息，请手动输入股票名称')
-      }
-    }
-    // 港股和美股不调用API，用户需要手动输入
-  } catch (error: any) {
-    console.error('获取股票信息失败:', error)
-    ElMessage.warning('获取股票信息失败，请手动输入股票名称')
-  }
+  // 现在由 StockSearchInput 组件处理，此函数保留兼容
 }
 
 const handleAddFavorite = async () => {

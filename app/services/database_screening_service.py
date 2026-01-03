@@ -152,8 +152,18 @@ class DatabaseScreeningService:
                     enabled_sources = ['tushare', 'akshare', 'baostock']
                     logger.warning(f"⚠️ [database_screening] 没有启用的数据源，使用默认: {enabled_sources}")
 
-                source = enabled_sources[0] if enabled_sources else 'tushare'
-                logger.info(f"✅ [database_screening] 最终使用的数据源: {source}")
+                # 🔥 检查数据库中实际有数据的数据源，优先使用有数据的
+                for src in enabled_sources:
+                    count = await collection.count_documents({"source": src})
+                    if count > 0:
+                        source = src
+                        logger.info(f"✅ [database_screening] 选择有数据的数据源: {source} ({count} 条记录)")
+                        break
+                
+                # 如果都没有数据，使用第一个启用的数据源
+                if not source:
+                    source = enabled_sources[0] if enabled_sources else 'akshare'
+                    logger.warning(f"⚠️ [database_screening] 没有找到有数据的数据源，使用: {source}")
 
             # 构建查询条件（现在视图已包含实时行情数据，可以直接查询所有字段）
             query = await self._build_query(conditions)

@@ -85,63 +85,69 @@
           <!-- 财务指标 -->
           <el-col :xs="24" :sm="12" :md="8">
             <el-form-item label="市盈率 (PE)">
-              <el-input-number
-                v-model="filters.peRatio.min"
-                placeholder="最小值"
-                :min="0"
-                :precision="2"
-                style="width: 45%"
-              />
-              <span style="margin: 0 8px">-</span>
-              <el-input-number
-                v-model="filters.peRatio.max"
-                placeholder="最大值"
-                :min="0"
-                :precision="2"
-                style="width: 45%"
-              />
+              <div class="range-input">
+                <el-input-number
+                  v-model="filters.peRatio.min"
+                  placeholder="最小"
+                  :min="0"
+                  :precision="2"
+                  class="range-input-number"
+                />
+                <span class="range-separator">-</span>
+                <el-input-number
+                  v-model="filters.peRatio.max"
+                  placeholder="最大"
+                  :min="0"
+                  :precision="2"
+                  class="range-input-number"
+                />
+              </div>
             </el-form-item>
           </el-col>
 
           <el-col :xs="24" :sm="12" :md="8">
             <el-form-item label="市净率 (PB)">
-              <el-input-number
-                v-model="filters.pbRatio.min"
-                placeholder="最小值"
-                :min="0"
-                :precision="2"
-                style="width: 45%"
-              />
-              <span style="margin: 0 8px">-</span>
-              <el-input-number
-                v-model="filters.pbRatio.max"
-                placeholder="最大值"
-                :min="0"
-                :precision="2"
-                style="width: 45%"
-              />
+              <div class="range-input">
+                <el-input-number
+                  v-model="filters.pbRatio.min"
+                  placeholder="最小"
+                  :min="0"
+                  :precision="2"
+                  class="range-input-number"
+                />
+                <span class="range-separator">-</span>
+                <el-input-number
+                  v-model="filters.pbRatio.max"
+                  placeholder="最大"
+                  :min="0"
+                  :precision="2"
+                  class="range-input-number"
+                />
+              </div>
             </el-form-item>
           </el-col>
 
           <el-col :xs="24" :sm="12" :md="8">
             <el-form-item label="ROE (%)">
-              <el-input-number
-                v-model="filters.roe.min"
-                placeholder="最小值"
-                :min="0"
-                :max="100"
-                :precision="2"
-                style="width: 45%"
-              />
-              <span style="margin: 0 8px">-</span>
-              <el-input-number
-                v-model="filters.roe.max"
-                placeholder="最大值"
-                :min="0"
-                :max="100"
-                :precision="2"
-                style="width: 45%"
-              />
+              <div class="range-input">
+                <el-input-number
+                  v-model="filters.roe.min"
+                  placeholder="最小"
+                  :min="0"
+                  :max="100"
+                  :precision="2"
+                  class="range-input-number"
+                />
+                <span class="range-separator">-</span>
+                <el-input-number
+                  v-model="filters.roe.max"
+                  placeholder="最大"
+                  :min="0"
+                  :max="100"
+                  :precision="2"
+                  class="range-input-number"
+                />
+              </div>
             </el-form-item>
           </el-col>
         </el-row>
@@ -150,19 +156,21 @@
           <!-- 技术指标 -->
           <el-col :xs="24" :sm="12" :md="8">
             <el-form-item label="涨跌幅 (%)">
-              <el-input-number
-                v-model="filters.changePercent.min"
-                placeholder="最小值"
-                :precision="2"
-                style="width: 45%"
-              />
-              <span style="margin: 0 8px">-</span>
-              <el-input-number
-                v-model="filters.changePercent.max"
-                placeholder="最大值"
-                :precision="2"
-                style="width: 45%"
-              />
+              <div class="range-input">
+                <el-input-number
+                  v-model="filters.changePercent.min"
+                  placeholder="最小"
+                  :precision="2"
+                  class="range-input-number"
+                />
+                <span class="range-separator">-</span>
+                <el-input-number
+                  v-model="filters.changePercent.max"
+                  placeholder="最大"
+                  :precision="2"
+                  class="range-input-number"
+                />
+              </div>
             </el-form-item>
           </el-col>
 
@@ -319,14 +327,10 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" width="180" fixed="right">
+        <el-table-column label="操作" width="80" fixed="right" class-name="mobile-action-col">
           <template #default="{ row }">
-            <el-button type="text" size="small" @click="analyzeSingle(row)">
+            <el-button type="primary" size="small" @click="analyzeSingle(row)">
               分析
-            </el-button>
-            <el-button type="text" size="small" @click="toggleFavorite(row)">
-              <el-icon><Star /></el-icon>
-              {{ isFavorited(row.code) ? '取消自选' : '加入自选' }}
             </el-button>
           </template>
         </el-table-column>
@@ -850,6 +854,23 @@ onMounted(() => {
   .text-green {
     color: #67c23a;
   }
+
+  /* 范围输入框样式 */
+  .range-input {
+    display: flex;
+    align-items: center;
+    width: 100%;
+
+    .range-input-number {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .range-separator {
+      margin: 0 8px;
+      color: var(--el-text-color-regular);
+    }
+  }
 }
 
 /* 移动端响应式适配 */
@@ -907,16 +928,24 @@ onMounted(() => {
         }
 
         :deep(.el-form-item__content) {
-          flex-wrap: wrap;
+          flex-wrap: nowrap;
         }
 
-        :deep(.el-select),
-        :deep(.el-input-number) {
+        :deep(.el-select) {
           width: 100% !important;
         }
 
-        :deep(.el-input-number) {
-          width: 42% !important;
+        .range-input {
+          flex-direction: column;
+          gap: 8px;
+
+          .range-input-number {
+            width: 100%;
+          }
+
+          .range-separator {
+            display: none;
+          }
         }
 
         .filter-actions {
@@ -960,22 +989,30 @@ onMounted(() => {
       }
 
       :deep(.el-table) {
-        font-size: 13px;
+        font-size: 12px;
+        width: 100% !important;
+        overflow-x: auto;
 
         .el-table__header th {
-          padding: 8px 0;
+          padding: 6px 4px;
+          font-size: 11px;
+          white-space: nowrap;
         }
 
         .el-table__body td {
           padding: 8px 4px;
         }
 
-        /* 隐藏部分列 */
+        /* 移动端隐藏部分列，只保留核心信息 */
+        .el-table__cell:nth-child(1),  /* 选择框 */
         .el-table__cell:nth-child(4),  /* 行业 */
-        .el-table__cell:nth-child(8),  /* 市净率 */
-        .el-table__cell:nth-child(9),  /* ROE */
-        .el-table__cell:nth-child(10), /* 板块 */
-        .el-table__cell:nth-child(11)  /* 交易所 */
+        .el-table__cell:nth-child(7),  /* 市值 */
+        .el-table__cell:nth-child(8),  /* 市盈率 */
+        .el-table__cell:nth-child(9),  /* 市净率 */
+        .el-table__cell:nth-child(10), /* ROE */
+        .el-table__cell:nth-child(11), /* 板块 */
+        .el-table__cell:nth-child(12), /* 交易所 */
+        .el-table__cell:nth-child(13)  /* 操作 */
         {
           display: none;
         }

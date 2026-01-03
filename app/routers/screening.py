@@ -129,15 +129,17 @@ def _convert_legacy_conditions_to_new_format(legacy_conditions: Dict[str, Any]) 
                     # 映射操作符
                     mapped_op = operator_mapping.get(op, op)
 
-                    # 处理市值单位转换（前端传入的是万元，数据库存储的是亿元）
-                    if mapped_field == "total_mv" and isinstance(value, list):
-                        # 将万元转换为亿元
+                    # 注意：前端已经发送亿元单位的市值，无需再转换
+                    # 如果前端发送的是 market_cap 字段（旧格式，万元），才需要转换
+                    if field == "market_cap" and mapped_field == "total_mv" and isinstance(value, list):
+                        # 旧格式：将万元转换为亿元
                         converted_value = [v / 10000 for v in value if isinstance(v, (int, float))]
-                        logger.info(f"[screening] 市值单位转换: {value} 万元 -> {converted_value} 亿元")
+                        logger.info(f"[screening] 市值单位转换(旧格式): {value} 万元 -> {converted_value} 亿元")
                         value = converted_value
-                    elif mapped_field == "total_mv" and isinstance(value, (int, float)):
+                    elif field == "market_cap" and mapped_field == "total_mv" and isinstance(value, (int, float)):
                         value = value / 10000
-                        logger.info(f"[screening] 市值单位转换: {child.get('value')} 万元 -> {value} 亿元")
+                        logger.info(f"[screening] 市值单位转换(旧格式): {child.get('value')} 万元 -> {value} 亿元")
+                    # total_mv 字段直接使用，前端已经是亿元单位
 
                     # 创建筛选条件
                     condition = ScreeningCondition(
