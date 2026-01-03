@@ -207,7 +207,8 @@ class DatabaseScreeningService:
 
         for condition in conditions:
             field = condition.get("field") if isinstance(condition, dict) else condition.field
-            operator = condition.get("operator") if isinstance(condition, dict) else condition.operator
+            # 兼容 'op' 和 'operator' 两种字段名
+            operator = condition.get("op") or condition.get("operator") if isinstance(condition, dict) else condition.operator
             value = condition.get("value") if isinstance(condition, dict) else condition.value
 
             logger.info(f"🔍 [_build_query] 处理条件: field={field}, operator={operator}, value={value}")
