@@ -2553,16 +2553,48 @@ class ConfigService:
                 "provider_name": "Anthropic Claude",
                 "models": [
                     {
-                        "name": "claude-3-5-sonnet-20241022",
-                        "display_name": "Claude 3.5 Sonnet - 当前旗舰",
+                        "name": "claude-opus-4-5-20251101",
+                        "display_name": "Claude Opus 4.5 - 最强旗舰",
+                        "input_price_per_1k": 0.015,
+                        "output_price_per_1k": 0.075,
+                        "context_length": 200000,
+                        "currency": "USD"
+                    },
+                    {
+                        "name": "claude-sonnet-4-5-20250929",
+                        "display_name": "Claude Sonnet 4.5 - 新一代平衡",
                         "input_price_per_1k": 0.003,
                         "output_price_per_1k": 0.015,
                         "context_length": 200000,
                         "currency": "USD"
                     },
                     {
-                        "name": "claude-3-5-sonnet-20240620",
-                        "display_name": "Claude 3.5 Sonnet (旧版)",
+                        "name": "claude-sonnet-4-20250514",
+                        "display_name": "Claude Sonnet 4 - 高性能",
+                        "input_price_per_1k": 0.003,
+                        "output_price_per_1k": 0.015,
+                        "context_length": 200000,
+                        "currency": "USD"
+                    },
+                    {
+                        "name": "claude-haiku-4-5-20251001",
+                        "display_name": "Claude Haiku 4.5 - 极速版",
+                        "input_price_per_1k": 0.0008,
+                        "output_price_per_1k": 0.004,
+                        "context_length": 200000,
+                        "currency": "USD"
+                    },
+                    {
+                        "name": "claude-3-7-sonnet-20250219",
+                        "display_name": "Claude 3.7 Sonnet - 扩展思考",
+                        "input_price_per_1k": 0.003,
+                        "output_price_per_1k": 0.015,
+                        "context_length": 200000,
+                        "currency": "USD"
+                    },
+                    {
+                        "name": "claude-3-5-sonnet-20241022",
+                        "display_name": "Claude 3.5 Sonnet - 经典版",
                         "input_price_per_1k": 0.003,
                         "output_price_per_1k": 0.015,
                         "context_length": 200000,
@@ -2570,23 +2602,15 @@ class ConfigService:
                     },
                     {
                         "name": "claude-3-opus-20240229",
-                        "display_name": "Claude 3 Opus - 强大性能",
+                        "display_name": "Claude 3 Opus - 旧版旗舰",
                         "input_price_per_1k": 0.015,
                         "output_price_per_1k": 0.075,
                         "context_length": 200000,
                         "currency": "USD"
                     },
                     {
-                        "name": "claude-3-sonnet-20240229",
-                        "display_name": "Claude 3 Sonnet - 平衡版",
-                        "input_price_per_1k": 0.003,
-                        "output_price_per_1k": 0.015,
-                        "context_length": 200000,
-                        "currency": "USD"
-                    },
-                    {
                         "name": "claude-3-haiku-20240307",
-                        "display_name": "Claude 3 Haiku - 快速版",
+                        "display_name": "Claude 3 Haiku - 旧版快速",
                         "input_price_per_1k": 0.00025,
                         "output_price_per_1k": 0.00125,
                         "context_length": 200000,
@@ -3723,27 +3747,55 @@ class ConfigService:
             }
 
     def _test_openai_api(self, api_key: str, display_name: str) -> dict:
-        """测试OpenAI API"""
+        """测试OpenAI API（支持代理服务）"""
         try:
             import requests
+            import os
 
-            url = "https://api.openai.com/v1/chat/completions"
+            # 优先使用环境变量中的 base_url，支持代理服务
+            base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
+            base_url = base_url.rstrip('/')
+            url = f"{base_url}/chat/completions"
+
+            logger.info(f"🔍 测试 OpenAI API: {url}")
 
             headers = {
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {api_key}"
             }
 
+            # 先获取可用模型列表
+            models_url = f"{base_url}/models"
+            try:
+                models_response = requests.get(models_url, headers=headers, timeout=10)
+                if models_response.status_code == 200:
+                    models_data = models_response.json()
+                    available_models = [m.get("id") for m in models_data.get("data", [])]
+                    # 选择一个可用的模型
+                    preferred_models = ["gpt-3.5-turbo", "gpt-4", "claude-sonnet-4", "claude-haiku-4-5"]
+                    model = "gpt-3.5-turbo"  # 默认
+                    for pm in preferred_models:
+                        if pm in available_models:
+                            model = pm
+                            break
+                    if available_models and model not in available_models:
+                        model = available_models[0]  # 使用第一个可用模型
+                    logger.info(f"🔍 选择测试模型: {model}")
+                else:
+                    model = "gpt-3.5-turbo"
+            except Exception:
+                model = "gpt-3.5-turbo"
+
             data = {
-                "model": "gpt-3.5-turbo",
+                "model": model,
                 "messages": [
-                    {"role": "user", "content": "你好，请简单介绍一下你自己。"}
+                    {"role": "user", "content": "Hi"}
                 ],
                 "max_tokens": 50,
                 "temperature": 0.1
             }
 
-            response = requests.post(url, json=data, headers=headers, timeout=10)
+            response = requests.post(url, json=data, headers=headers, timeout=15)
 
             if response.status_code == 200:
                 result = response.json()
@@ -3776,12 +3828,53 @@ class ConfigService:
                 "message": f"{display_name} API测试异常: {str(e)}"
             }
 
-    def _test_anthropic_api(self, api_key: str, display_name: str) -> dict:
-        """测试Anthropic API"""
+    def _test_anthropic_api(self, api_key: str, display_name: str, base_url: str = None) -> dict:
+        """测试Anthropic API（支持代理服务）"""
         try:
             import requests
+            import os
 
-            url = "https://api.anthropic.com/v1/messages"
+            # 优先使用传入的 base_url，其次使用环境变量，最后使用官方 API
+            if not base_url:
+                base_url = os.getenv("ANTHROPIC_BASE_URL")
+
+            # 检查是否配置了 OpenAI 兼容的代理服务
+            openai_base_url = os.getenv("OPENAI_BASE_URL", "")
+            openai_api_key = os.getenv("OPENAI_API_KEY", "")
+
+            # 如果 API Key 与 OpenAI 配置相同，说明使用的是 OpenAI 兼容代理
+            if api_key == openai_api_key and openai_base_url:
+                logger.info(f"🔍 检测到使用 OpenAI 兼容代理调用 Claude: {openai_base_url}")
+                # 使用 OpenAI 兼容格式测试
+                url = f"{openai_base_url.rstrip('/')}/chat/completions"
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {api_key}"
+                }
+                data = {
+                    "model": "claude-sonnet-4",  # 使用代理支持的模型
+                    "messages": [{"role": "user", "content": "Hi"}],
+                    "max_tokens": 50
+                }
+                response = requests.post(url, json=data, headers=headers, timeout=15)
+
+                if response.status_code == 200:
+                    result = response.json()
+                    if "choices" in result and len(result["choices"]) > 0:
+                        return {
+                            "success": True,
+                            "message": f"{display_name} API连接测试成功（通过 OpenAI 兼容代理）"
+                        }
+                return {
+                    "success": False,
+                    "message": f"{display_name} API测试失败: HTTP {response.status_code}"
+                }
+
+            # 使用原生 Anthropic API
+            if base_url:
+                url = f"{base_url.rstrip('/')}/v1/messages"
+            else:
+                url = "https://api.anthropic.com/v1/messages"
 
             headers = {
                 "Content-Type": "application/json",
