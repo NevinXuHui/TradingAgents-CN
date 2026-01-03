@@ -37,7 +37,7 @@
                     <el-form-item label="股票代码" required>
                       <el-input
                         v-model="analysisForm.stockCode"
-                        placeholder="如：000001、AAPL、700、1810"
+                        placeholder="如：000001、payh、AAPL、700"
                         clearable
                         size="large"
                         class="stock-input"

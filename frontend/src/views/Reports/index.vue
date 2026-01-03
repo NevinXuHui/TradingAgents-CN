@@ -13,8 +13,8 @@
 
     <!-- 筛选和操作栏 -->
     <el-card class="filter-card" shadow="never">
-      <el-row :gutter="16" align="middle">
-        <el-col :span="6">
+      <el-row :gutter="12" align="middle">
+        <el-col :xs="24" :sm="12" :md="6" :lg="6">
           <el-input
             v-model="searchKeyword"
             placeholder="搜索股票代码或名称"
@@ -26,45 +26,45 @@
             </template>
           </el-input>
         </el-col>
-        
-        <el-col :span="4">
+
+        <el-col :xs="12" :sm="12" :md="4" :lg="4">
           <el-select v-model="marketFilter" placeholder="市场筛选" clearable @change="handleMarketChange">
             <el-option label="A股" value="A股" />
             <el-option label="港股" value="港股" />
             <el-option label="美股" value="美股" />
           </el-select>
         </el-col>
-        
-        <el-col :span="6">
+
+        <el-col :xs="12" :sm="12" :md="6" :lg="6" class="date-picker-col">
           <el-date-picker
             v-model="dateRange"
             type="daterange"
             range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
+            start-placeholder="开始"
+            end-placeholder="结束"
             format="YYYY-MM-DD"
             value-format="YYYY-MM-DD"
             @change="handleDateChange"
           />
         </el-col>
-        
-        <el-col :span="8">
+
+        <el-col :xs="24" :sm="12" :md="8" :lg="8">
           <div class="action-buttons">
-            <el-button @click="exportSelected" :disabled="selectedReports.length === 0">
+            <el-button @click="exportSelected" :disabled="selectedReports.length === 0" class="mobile-hide-text">
               <el-icon><Download /></el-icon>
-              批量导出
+              <span class="btn-text">批量导出</span>
             </el-button>
-            <el-button @click="refreshReports">
+            <el-button @click="refreshReports" class="mobile-hide-text">
               <el-icon><Refresh /></el-icon>
-              刷新
+              <span class="btn-text">刷新</span>
             </el-button>
           </div>
         </el-col>
       </el-row>
     </el-card>
 
-    <!-- 报告列表 -->
-    <el-card class="reports-list-card" shadow="never">
+    <!-- 报告列表 - 桌面端表格 -->
+    <el-card class="reports-list-card desktop-table" shadow="never">
       <el-table
         :data="filteredReports"
         @selection-change="handleSelectionChange"
@@ -72,7 +72,7 @@
         style="width: 100%"
       >
         <el-table-column type="selection" width="55" />
-        
+
         <el-table-column prop="title" label="报告标题" min-width="200">
           <template #default="{ row }">
             <div class="report-title">
@@ -85,7 +85,7 @@
             </div>
           </template>
         </el-table-column>
-        
+
         <el-table-column prop="type" label="报告类型" width="120">
           <template #default="{ row }">
             <el-tag :type="getTypeColor(row.type)">
@@ -93,7 +93,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        
+
         <el-table-column prop="format" label="格式" width="100">
           <template #default="{ row }">
             <el-tag size="small" effect="plain">
@@ -101,7 +101,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        
+
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="getStatusType(row.status)">
@@ -180,6 +180,84 @@
         />
       </div>
     </el-card>
+
+    <!-- 报告列表 - 移动端卡片 -->
+    <div class="mobile-card-list" v-loading="loading">
+      <div v-if="filteredReports.length === 0 && !loading" class="empty-state">
+        <el-empty description="暂无报告数据" />
+      </div>
+
+      <div
+        v-for="report in filteredReports"
+        :key="report.id"
+        class="report-card"
+        @click="viewReport(report)"
+      >
+        <div class="card-header">
+          <div class="card-title">{{ report.title }}</div>
+          <el-tag :type="getStatusType(report.status)" size="small">
+            {{ getStatusText(report.status) }}
+          </el-tag>
+        </div>
+
+        <div class="card-info">
+          <span class="stock-info">{{ report.stock_code }} - {{ report.stock_name }}</span>
+        </div>
+
+        <div class="card-meta">
+          <div class="meta-left">
+            <el-tag :type="getTypeColor(report.type)" size="small">
+              {{ getTypeText(report.type) }}
+            </el-tag>
+            <el-tag v-if="report.model_info && report.model_info !== 'Unknown'" type="info" size="small">
+              {{ report.model_info }}
+            </el-tag>
+          </div>
+          <span class="time">{{ formatTime(report.created_at) }}</span>
+        </div>
+
+        <div class="card-actions" @click.stop>
+          <el-button size="small" type="primary" @click="viewReport(report)">
+            <el-icon><View /></el-icon>
+            查看
+          </el-button>
+          <el-dropdown
+            v-if="report.status === 'completed'"
+            trigger="click"
+            @command="(format) => downloadReport(report, format)"
+          >
+            <el-button size="small">
+              <el-icon><Download /></el-icon>
+              下载
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="markdown">Markdown</el-dropdown-item>
+                <el-dropdown-item command="docx">Word</el-dropdown-item>
+                <el-dropdown-item command="pdf">PDF</el-dropdown-item>
+                <el-dropdown-item command="json" divided>JSON</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+          <el-button size="small" type="danger" plain @click="deleteReport(report)">
+            <el-icon><Delete /></el-icon>
+          </el-button>
+        </div>
+      </div>
+
+      <!-- 移动端分页 -->
+      <div class="mobile-pagination" v-if="totalReports > 0">
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :total="totalReports"
+          layout="prev, pager, next"
+          :pager-count="5"
+          small
+          @current-change="handleCurrentChange"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -192,7 +270,9 @@ import {
   Search,
   Download,
   Refresh,
-  ArrowDown
+  ArrowDown,
+  View,
+  Delete
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 
@@ -501,6 +581,12 @@ onMounted(() => {
       gap: 8px;
       justify-content: flex-end;
     }
+
+    .date-picker-col {
+      :deep(.el-date-editor) {
+        width: 100%;
+      }
+    }
   }
 
   .reports-list-card {
@@ -516,6 +602,236 @@ onMounted(() => {
       display: flex;
       justify-content: center;
       margin-top: 24px;
+    }
+  }
+
+  // 移动端卡片列表 - 默认隐藏
+  .mobile-card-list {
+    display: none;
+  }
+}
+
+// ==================== 移动端响应式样式 ====================
+@media (max-width: 767px) {
+  .reports {
+    // 页面标题移动端适配
+    .page-header {
+      margin-bottom: 16px;
+
+      .page-title {
+        font-size: 18px;
+      }
+
+      .page-description {
+        font-size: 13px;
+      }
+    }
+
+    // 筛选卡片移动端适配
+    .filter-card {
+      margin-bottom: 16px;
+
+      :deep(.el-card__body) {
+        padding: 12px;
+      }
+
+      :deep(.el-row) {
+        row-gap: 12px;
+      }
+
+      :deep(.el-col) {
+        margin-bottom: 0;
+      }
+
+      :deep(.el-select),
+      :deep(.el-input) {
+        width: 100%;
+      }
+
+      :deep(.el-date-editor) {
+        width: 100% !important;
+
+        .el-range-separator {
+          padding: 0 4px;
+        }
+
+        .el-range-input {
+          width: 40%;
+        }
+      }
+
+      .action-buttons {
+        justify-content: flex-start;
+        margin-top: 4px;
+
+        .el-button {
+          flex: 1;
+
+          .btn-text {
+            display: none;
+          }
+        }
+      }
+    }
+
+    // 隐藏桌面端表格
+    .desktop-table {
+      display: none;
+    }
+
+    // 显示移动端卡片列表
+    .mobile-card-list {
+      display: block;
+
+      .empty-state {
+        padding: 40px 20px;
+        text-align: center;
+      }
+
+      .report-card {
+        background: var(--el-bg-color);
+        border: 1px solid var(--el-border-color-light);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        transition: all 0.2s ease;
+
+        &:active {
+          background: var(--el-fill-color-light);
+        }
+
+        .card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 8px;
+
+          .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--el-text-color-primary);
+            flex: 1;
+            margin-right: 8px;
+            line-height: 1.4;
+          }
+        }
+
+        .card-info {
+          margin-bottom: 10px;
+
+          .stock-info {
+            font-size: 13px;
+            color: var(--el-text-color-regular);
+          }
+        }
+
+        .card-meta {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 12px;
+          flex-wrap: wrap;
+          gap: 8px;
+
+          .meta-left {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+          }
+
+          .time {
+            font-size: 12px;
+            color: var(--el-text-color-placeholder);
+          }
+        }
+
+        .card-actions {
+          display: flex;
+          gap: 8px;
+          padding-top: 12px;
+          border-top: 1px solid var(--el-border-color-lighter);
+
+          .el-button {
+            flex: 1;
+            margin: 0;
+          }
+        }
+      }
+
+      .mobile-pagination {
+        display: flex;
+        justify-content: center;
+        padding: 16px 0;
+
+        :deep(.el-pagination) {
+          .el-pager li {
+            min-width: 28px;
+            height: 28px;
+            line-height: 28px;
+          }
+        }
+      }
+    }
+  }
+}
+
+// ==================== 小屏手机适配 (< 375px) ====================
+@media (max-width: 374px) {
+  .reports {
+    .page-header {
+      .page-title {
+        font-size: 16px;
+      }
+    }
+
+    .filter-card {
+      .action-buttons {
+        .el-button {
+          padding: 8px 12px;
+        }
+      }
+    }
+
+    .mobile-card-list {
+      .report-card {
+        padding: 12px;
+
+        .card-title {
+          font-size: 14px;
+        }
+
+        .card-actions {
+          flex-wrap: wrap;
+
+          .el-button {
+            min-width: calc(50% - 4px);
+            flex: none;
+          }
+        }
+      }
+    }
+  }
+}
+
+// ==================== 平板端适配 (768px - 991px) ====================
+@media (min-width: 768px) and (max-width: 991px) {
+  .reports {
+    .filter-card {
+      :deep(.el-row) {
+        row-gap: 12px;
+      }
+    }
+
+    .reports-list-card {
+      :deep(.el-table) {
+        font-size: 13px;
+
+        // 隐藏部分列
+        .el-table__cell:nth-child(4), // 格式列
+        .el-table__cell:nth-child(6) { // 模型列
+          display: none;
+        }
+      }
     }
   }
 }

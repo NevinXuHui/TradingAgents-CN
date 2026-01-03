@@ -19,66 +19,106 @@
 
     <!-- 筛选表单 -->
     <el-card class="filter-card" shadow="never">
-      <el-form :inline="true" @submit.prevent>
-        <el-form-item label="时间范围">
-          <el-date-picker v-model="filters.dateRange" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" format="YYYY-MM-DD" value-format="YYYY-MM-DD" style="width: 260px" />
-        </el-form-item>
-        <el-form-item label="市场">
-          <el-select v-model="filters.market" clearable placeholder="全部" style="width: 120px">
-            <el-option label="全部" value="" />
-            <el-option label="美股" value="美股" />
-            <el-option label="A股" value="A股" />
-            <el-option label="港股" value="港股" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="filters.status" clearable placeholder="全部" style="width: 120px">
-            <el-option label="全部" value="" />
-            <el-option label="进行中" value="processing" />
-            <el-option label="已完成" value="completed" />
-            <el-option label="失败" value="failed" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="股票">
-          <el-input v-model="filters.stock" placeholder="代码或名称" style="width: 160px" />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="applyFilters" :loading="loading">查询</el-button>
-          <el-button @click="resetFilters">重置</el-button>
-        </el-form-item>
+      <el-form :inline="true" @submit.prevent class="filter-form">
+        <el-row :gutter="12">
+          <el-col :xs="24" :sm="12" :md="6">
+            <el-form-item label="时间范围" class="filter-item">
+              <el-date-picker
+                v-model="filters.dateRange"
+                type="daterange"
+                range-separator="至"
+                start-placeholder="开始"
+                end-placeholder="结束"
+                format="YYYY-MM-DD"
+                value-format="YYYY-MM-DD"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="12" :sm="6" :md="4">
+            <el-form-item label="市场" class="filter-item">
+              <el-select v-model="filters.market" clearable placeholder="全部">
+                <el-option label="全部" value="" />
+                <el-option label="美股" value="美股" />
+                <el-option label="A股" value="A股" />
+                <el-option label="港股" value="港股" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :xs="12" :sm="6" :md="4">
+            <el-form-item label="状态" class="filter-item">
+              <el-select v-model="filters.status" clearable placeholder="全部">
+                <el-option label="全部" value="" />
+                <el-option label="进行中" value="processing" />
+                <el-option label="已完成" value="completed" />
+                <el-option label="失败" value="failed" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :xs="12" :sm="6" :md="4">
+            <el-form-item label="股票" class="filter-item">
+              <el-input v-model="filters.stock" placeholder="代码或名称" />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="12" :sm="6" :md="6">
+            <el-form-item class="filter-item filter-buttons">
+              <el-button type="primary" @click="applyFilters" :loading="loading">查询</el-button>
+              <el-button @click="resetFilters">重置</el-button>
+            </el-form-item>
+          </el-col>
+        </el-row>
       </el-form>
     </el-card>
 
     <!-- 统计卡片 -->
-    <el-row :gutter="16" style="margin-top: 12px">
-      <el-col :span="6">
-        <el-card shadow="never"><div class="stat"><div class="value">{{ stats.total }}</div><div class="label">总任务</div></div></el-card>
+    <el-row :gutter="12" class="stats-row">
+      <el-col :xs="12" :sm="6" :md="6" :lg="6">
+        <el-card shadow="never" class="stat-card">
+          <div class="stat">
+            <div class="value">{{ stats.total }}</div>
+            <div class="label">总任务</div>
+          </div>
+        </el-card>
       </el-col>
-      <el-col :span="6">
-        <el-card shadow="never"><div class="stat"><div class="value">{{ stats.completed }}</div><div class="label">已完成</div></div></el-card>
+      <el-col :xs="12" :sm="6" :md="6" :lg="6">
+        <el-card shadow="never" class="stat-card">
+          <div class="stat">
+            <div class="value success">{{ stats.completed }}</div>
+            <div class="label">已完成</div>
+          </div>
+        </el-card>
       </el-col>
-      <el-col :span="6">
-        <el-card shadow="never"><div class="stat"><div class="value">{{ stats.failed }}</div><div class="label">失败</div></div></el-card>
+      <el-col :xs="12" :sm="6" :md="6" :lg="6">
+        <el-card shadow="never" class="stat-card">
+          <div class="stat">
+            <div class="value danger">{{ stats.failed }}</div>
+            <div class="label">失败</div>
+          </div>
+        </el-card>
       </el-col>
-      <el-col :span="6">
-        <el-card shadow="never"><div class="stat"><div class="value">{{ stats.uniqueStocks }}</div><div class="label">股票数</div></div></el-card>
+      <el-col :xs="12" :sm="6" :md="6" :lg="6">
+        <el-card shadow="never" class="stat-card">
+          <div class="stat">
+            <div class="value primary">{{ stats.uniqueStocks }}</div>
+            <div class="label">股票数</div>
+          </div>
+        </el-card>
       </el-col>
     </el-row>
 
-
-    <el-card class="list-card" shadow="never">
+    <!-- 桌面端表格 -->
+    <el-card class="list-card desktop-table" shadow="never">
       <div class="list-header">
         <div class="left">
           <el-input v-model="keyword" placeholder="搜索股票代码/名称" clearable style="width: 220px" />
           <el-button @click="refreshList" :loading="loading">
             <el-icon><Refresh /></el-icon>
-            刷新
+            <span class="btn-text">刷新</span>
           </el-button>
         </div>
         <div class="right">
           <el-button @click="exportSelected" :disabled="selectedRows.length===0">
             <el-icon><Download /></el-icon>
-            导出所选
+            <span class="btn-text">导出所选</span>
           </el-button>
         </div>
       </div>
@@ -128,6 +168,93 @@
       </div>
     </el-card>
 
+    <!-- 移动端卡片列表 -->
+    <div class="mobile-card-list" v-loading="loading">
+      <div class="mobile-list-header">
+        <el-input v-model="keyword" placeholder="搜索股票" clearable size="small" />
+        <el-button @click="refreshList" :loading="loading" size="small">
+          <el-icon><Refresh /></el-icon>
+        </el-button>
+      </div>
+
+      <div v-if="filteredList.length === 0 && !loading" class="empty-state">
+        <el-empty description="暂无任务数据" />
+      </div>
+
+      <div
+        v-for="task in filteredList"
+        :key="task.task_id"
+        class="task-card"
+      >
+        <div class="card-header">
+          <div class="stock-info">
+            <span class="stock-code">{{ task.stock_code }}</span>
+            <span class="stock-name">{{ task.stock_name }}</span>
+          </div>
+          <el-tag :type="getStatusType(task.status)" size="small">
+            {{ getStatusText(task.status) }}
+          </el-tag>
+        </div>
+
+        <div class="card-progress" v-if="task.status === 'processing' || task.status === 'running' || task.status === 'pending'">
+          <el-progress
+            :percentage="task.progress || 0"
+            :stroke-width="8"
+            :status="task.status==='failed'?'exception':undefined"
+          />
+        </div>
+
+        <div class="card-meta">
+          <span class="task-id">{{ task.task_id?.slice(0, 8) }}...</span>
+          <span class="time">{{ formatTime(task.start_time || task.created_at) }}</span>
+        </div>
+
+        <div class="card-actions">
+          <template v-if="task.status === 'completed'">
+            <el-button size="small" type="primary" @click="openResult(task)">
+              <el-icon><View /></el-icon>
+              结果
+            </el-button>
+            <el-button size="small" @click="openReport(task)">
+              <el-icon><Document /></el-icon>
+              报告
+            </el-button>
+          </template>
+          <template v-if="task.status === 'failed'">
+            <el-button size="small" type="warning" @click="showErrorDetail(task)">
+              <el-icon><Warning /></el-icon>
+              错误
+            </el-button>
+            <el-button size="small" @click="retryTask(task)">
+              <el-icon><RefreshRight /></el-icon>
+              重试
+            </el-button>
+          </template>
+          <template v-if="task.status === 'processing' || task.status === 'running' || task.status === 'pending'">
+            <el-button size="small" type="warning" plain @click="markAsFailed(task)">
+              标记失败
+            </el-button>
+          </template>
+          <el-button size="small" type="danger" plain @click="deleteTask(task)">
+            <el-icon><Delete /></el-icon>
+          </el-button>
+        </div>
+      </div>
+
+      <!-- 移动端分页 -->
+      <div class="mobile-pagination" v-if="total > 0">
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :total="total"
+          layout="prev, pager, next"
+          :pager-count="5"
+          small
+          @current-change="handleCurrentChange"
+        />
+      </div>
+    </div>
+
     <!-- 结果弹窗组件化 -->
     <TaskResultDialog
       v-model="resultVisible"
@@ -147,7 +274,7 @@
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { List, Refresh, Download } from '@element-plus/icons-vue'
+import { List, Refresh, Download, View, Document, Warning, RefreshRight, Delete } from '@element-plus/icons-vue'
 import { analysisApi } from '@/api/analysis'
 import { marked } from 'marked'
 import TaskResultDialog from '@/components/Global/TaskResultDialog.vue'
@@ -531,12 +658,379 @@ const formatTime = (t:string) => t ? formatDateTime(t) : '-'
 
 <style scoped lang="scss">
 .task-center {
-  .page-header { margin-bottom: 24px; }
-  .page-title { display:flex; align-items:center; gap:8px; font-size:24px; font-weight:600; margin:0 0 8px 0; }
-  .page-description { color: var(--el-text-color-regular); margin:0; }
-  .tabs-card { margin-bottom: 16px; }
-  .list-header { display:flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap:8px; }
-  .pagination-wrapper { display:flex; justify-content:center; margin-top: 16px; }
+  .page-header {
+    margin-bottom: 24px;
+  }
+
+  .page-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+  }
+
+  .page-description {
+    color: var(--el-text-color-regular);
+    margin: 0;
+  }
+
+  .tabs-card {
+    margin-bottom: 16px;
+
+    :deep(.el-card__body) {
+      padding-bottom: 0;
+    }
+  }
+
+  .filter-card {
+    margin-bottom: 16px;
+
+    .filter-form {
+      :deep(.el-form-item) {
+        margin-bottom: 0;
+        margin-right: 0;
+      }
+
+      .filter-item {
+        width: 100%;
+
+        :deep(.el-form-item__content) {
+          width: 100%;
+        }
+
+        :deep(.el-select),
+        :deep(.el-input),
+        :deep(.el-date-editor) {
+          width: 100%;
+        }
+      }
+
+      .filter-buttons {
+        :deep(.el-form-item__content) {
+          justify-content: flex-start;
+          gap: 8px;
+        }
+      }
+    }
+  }
+
+  .stats-row {
+    margin-top: 12px;
+    margin-bottom: 16px;
+
+    .stat-card {
+      :deep(.el-card__body) {
+        padding: 16px;
+      }
+    }
+
+    .stat {
+      text-align: center;
+
+      .value {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--el-text-color-primary);
+
+        &.success {
+          color: var(--el-color-success);
+        }
+
+        &.danger {
+          color: var(--el-color-danger);
+        }
+
+        &.primary {
+          color: var(--el-color-primary);
+        }
+      }
+
+      .label {
+        font-size: 13px;
+        color: var(--el-text-color-secondary);
+        margin-top: 4px;
+      }
+    }
+  }
+
+  .list-card {
+    .list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 8px;
+
+      .left {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+    }
+
+    .pagination-wrapper {
+      display: flex;
+      justify-content: center;
+      margin-top: 16px;
+    }
+  }
+
+  // 移动端卡片列表 - 默认隐藏
+  .mobile-card-list {
+    display: none;
+  }
+}
+
+// ==================== 移动端响应式样式 ====================
+@media (max-width: 767px) {
+  .task-center {
+    .page-header {
+      margin-bottom: 16px;
+
+      .page-title {
+        font-size: 18px;
+      }
+
+      .page-description {
+        font-size: 13px;
+      }
+    }
+
+    .tabs-card {
+      margin-bottom: 12px;
+
+      :deep(.el-tabs__item) {
+        padding: 0 12px;
+        font-size: 14px;
+      }
+    }
+
+    .filter-card {
+      margin-bottom: 12px;
+
+      :deep(.el-card__body) {
+        padding: 12px;
+      }
+
+      .filter-form {
+        :deep(.el-row) {
+          row-gap: 12px;
+        }
+
+        :deep(.el-form-item__label) {
+          font-size: 13px;
+          padding-bottom: 4px;
+        }
+
+        :deep(.el-date-editor) {
+          .el-range-separator {
+            padding: 0 4px;
+          }
+
+          .el-range-input {
+            font-size: 13px;
+          }
+        }
+
+        .filter-buttons {
+          :deep(.el-form-item__content) {
+            justify-content: flex-start;
+          }
+
+          .el-button {
+            flex: 1;
+          }
+        }
+      }
+    }
+
+    .stats-row {
+      margin-top: 8px;
+      margin-bottom: 12px;
+
+      :deep(.el-col) {
+        margin-bottom: 8px;
+      }
+
+      .stat-card {
+        :deep(.el-card__body) {
+          padding: 12px 8px;
+        }
+      }
+
+      .stat {
+        .value {
+          font-size: 22px;
+        }
+
+        .label {
+          font-size: 12px;
+        }
+      }
+    }
+
+    // 隐藏桌面端表格
+    .desktop-table {
+      display: none;
+    }
+
+    // 显示移动端卡片列表
+    .mobile-card-list {
+      display: block;
+
+      .mobile-list-header {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+
+        .el-input {
+          flex: 1;
+        }
+      }
+
+      .empty-state {
+        padding: 40px 20px;
+        text-align: center;
+      }
+
+      .task-card {
+        background: var(--el-bg-color);
+        border: 1px solid var(--el-border-color-light);
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 12px;
+
+        .card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 10px;
+
+          .stock-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            .stock-code {
+              font-size: 15px;
+              font-weight: 600;
+              color: var(--el-color-primary);
+            }
+
+            .stock-name {
+              font-size: 14px;
+              color: var(--el-text-color-regular);
+            }
+          }
+        }
+
+        .card-progress {
+          margin-bottom: 10px;
+        }
+
+        .card-meta {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 12px;
+          font-size: 12px;
+          color: var(--el-text-color-placeholder);
+
+          .task-id {
+            font-family: monospace;
+          }
+        }
+
+        .card-actions {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+          padding-top: 12px;
+          border-top: 1px solid var(--el-border-color-lighter);
+
+          .el-button {
+            flex: 1;
+            min-width: calc(33% - 6px);
+            margin: 0;
+          }
+        }
+      }
+
+      .mobile-pagination {
+        display: flex;
+        justify-content: center;
+        padding: 16px 0;
+      }
+    }
+  }
+}
+
+// ==================== 小屏手机适配 (< 375px) ====================
+@media (max-width: 374px) {
+  .task-center {
+    .page-header .page-title {
+      font-size: 16px;
+    }
+
+    .stats-row .stat .value {
+      font-size: 18px;
+    }
+
+    .mobile-card-list {
+      .task-card {
+        padding: 12px;
+
+        .card-header .stock-info {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 2px;
+
+          .stock-code {
+            font-size: 14px;
+          }
+
+          .stock-name {
+            font-size: 12px;
+          }
+        }
+
+        .card-actions {
+          .el-button {
+            min-width: calc(50% - 4px);
+            font-size: 12px;
+            padding: 6px 8px;
+          }
+        }
+      }
+    }
+  }
+}
+
+// ==================== 平板端适配 (768px - 991px) ====================
+@media (min-width: 768px) and (max-width: 991px) {
+  .task-center {
+    .filter-card {
+      .filter-form {
+        :deep(.el-row) {
+          row-gap: 12px;
+        }
+      }
+    }
+
+    .list-card {
+      :deep(.el-table) {
+        font-size: 13px;
+      }
+
+      .list-header {
+        .btn-text {
+          display: none;
+        }
+      }
+    }
+  }
 }
 </style>
 

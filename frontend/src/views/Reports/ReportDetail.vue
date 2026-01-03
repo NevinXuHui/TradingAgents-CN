@@ -114,7 +114,7 @@
         <div class="metrics-content">
           <el-row :gutter="24">
             <!-- 分析参考 -->
-            <el-col :span="8">
+            <el-col :xs="24" :sm="24" :md="8" :lg="8" :xl="8">
               <div class="metric-item">
                 <div class="metric-label">
                   <el-icon><TrendCharts /></el-icon>
@@ -129,7 +129,7 @@
             </el-col>
 
             <!-- 风险评估 -->
-            <el-col :span="8">
+            <el-col :xs="24" :sm="12" :md="8" :lg="8" :xl="8">
               <div class="metric-item risk-item">
                 <div class="metric-label">
                   <el-icon><Warning /></el-icon>
@@ -157,7 +157,7 @@
             </el-col>
 
             <!-- 模型置信度 -->
-            <el-col :span="8">
+            <el-col :xs="24" :sm="12" :md="8" :lg="8" :xl="8">
               <div class="metric-item confidence-item">
                 <div class="metric-label">
                   <el-icon><DataAnalysis /></el-icon>
@@ -170,8 +170,8 @@
                   <el-progress
                     type="circle"
                     :percentage="normalizeConfidenceScore(report.confidence_score || 0)"
-                    :width="120"
-                    :stroke-width="10"
+                    :width="progressSize"
+                    :stroke-width="windowWidth < 768 ? 8 : 10"
                     :color="getConfidenceColor(normalizeConfidenceScore(report.confidence_score || 0))"
                   >
                     <template #default="{ percentage }">
@@ -259,7 +259,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, h, reactive } from 'vue'
+import { ref, onMounted, onUnmounted, computed, h, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, ElInput, ElInputNumber, ElForm, ElFormItem } from 'element-plus'
 import { paperApi } from '@/api/paper'
@@ -303,6 +303,19 @@ const loading = ref(true)
 const report = ref(null)
 const activeModule = ref('')
 const llmConfigs = ref<LLMConfig[]>([]) // 存储所有模型配置
+const windowWidth = ref(window.innerWidth)
+
+// 响应式圆环尺寸
+const progressSize = computed(() => {
+  if (windowWidth.value < 375) return 80
+  if (windowWidth.value < 768) return 100
+  return 120
+})
+
+// 监听窗口大小变化
+const handleResize = () => {
+  windowWidth.value = window.innerWidth
+}
 
 // 获取模型配置列表
 const fetchLLMConfigs = async () => {
@@ -911,6 +924,11 @@ const getRiskDescription = (riskLevel: string) => {
 onMounted(() => {
   fetchLLMConfigs() // 先加载模型配置
   fetchReportDetail() // 再加载报告详情
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
 })
 </script>
 
@@ -1258,6 +1276,352 @@ onMounted(() => {
 
   .error-container {
     padding: 48px 24px;
+  }
+}
+
+// ==================== 移动端响应式样式 ====================
+@media (max-width: 767px) {
+  .report-detail {
+    .report-content {
+      // 报告头部移动端适配
+      .report-header {
+        margin-bottom: 16px;
+
+        .header-content {
+          flex-direction: column;
+          gap: 16px;
+
+          .title-section {
+            width: 100%;
+
+            .report-title {
+              font-size: 18px;
+              flex-wrap: wrap;
+              margin-bottom: 8px;
+            }
+
+            .report-meta {
+              gap: 8px;
+
+              .el-tag {
+                font-size: 12px;
+              }
+
+              .meta-item {
+                font-size: 12px;
+              }
+            }
+          }
+
+          .action-section {
+            width: 100%;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+
+            .el-button {
+              flex: 1;
+              min-width: calc(50% - 4px);
+
+              // 隐藏按钮文字，只显示图标（可选）
+              .el-icon--right {
+                margin-left: 4px;
+              }
+            }
+          }
+        }
+      }
+
+      // 风险提示移动端适配
+      .risk-disclaimer {
+        margin-bottom: 16px;
+
+        :deep(.el-alert) {
+          padding: 12px;
+        }
+
+        .disclaimer-content {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+          font-size: 13px;
+        }
+
+        .disclaimer-icon {
+          font-size: 20px;
+        }
+
+        .disclaimer-text {
+          ul {
+            padding-left: 16px;
+            font-size: 12px;
+            line-height: 1.6;
+
+            li {
+              margin-bottom: 4px;
+            }
+          }
+
+          strong {
+            font-size: 14px;
+          }
+        }
+      }
+
+      // 关键指标卡片移动端适配
+      .metrics-card {
+        margin-bottom: 16px;
+
+        :deep(.el-card__body) {
+          padding: 12px;
+        }
+      }
+
+      .metrics-content {
+        :deep(.el-row) {
+          margin-left: -6px !important;
+          margin-right: -6px !important;
+
+          .el-col {
+            padding-left: 6px !important;
+            padding-right: 6px !important;
+            margin-bottom: 12px;
+          }
+        }
+
+        .metric-item {
+          padding: 16px 12px;
+
+          .metric-label {
+            font-size: 13px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 4px;
+
+            .el-icon {
+              font-size: 16px;
+            }
+          }
+
+          .metric-value {
+            font-size: 15px;
+          }
+
+          .recommendation-value {
+            font-size: 14px;
+          }
+        }
+
+        // 置信度圆环移动端缩小
+        .confidence-item {
+          .confidence-display {
+            gap: 8px;
+
+            :deep(.el-progress) {
+              width: 100px !important;
+              height: 100px !important;
+            }
+
+            .confidence-text {
+              .confidence-number {
+                font-size: 26px;
+              }
+
+              .confidence-unit {
+                font-size: 12px;
+              }
+            }
+
+            .confidence-label {
+              font-size: 14px;
+            }
+          }
+        }
+
+        // 风险星级移动端适配
+        .risk-item {
+          .risk-display {
+            gap: 8px;
+
+            .risk-stars {
+              font-size: 22px;
+              gap: 4px;
+            }
+
+            .risk-label {
+              font-size: 15px;
+            }
+          }
+        }
+
+        // 关键要点移动端适配
+        .key-points {
+          margin-top: 20px;
+          padding-top: 16px;
+
+          h4 {
+            font-size: 14px;
+            margin-bottom: 12px;
+          }
+
+          ul li {
+            padding: 10px;
+            font-size: 13px;
+            margin-bottom: 8px;
+          }
+        }
+      }
+
+      // 摘要卡片移动端适配
+      .summary-card,
+      .modules-card {
+        margin-bottom: 16px;
+
+        .card-header {
+          font-size: 14px;
+        }
+      }
+
+      .summary-content {
+        font-size: 14px;
+      }
+
+      // 标签页移动端适配
+      .modules-card {
+        :deep(.el-tabs) {
+          .el-tabs__header {
+            margin-bottom: 12px;
+          }
+
+          .el-tabs__nav {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+
+            &::-webkit-scrollbar {
+              display: none;
+            }
+          }
+
+          .el-tabs__item {
+            padding: 0 10px;
+            font-size: 12px;
+            height: 36px;
+            line-height: 36px;
+          }
+
+          .el-tabs__content {
+            padding: 12px;
+          }
+        }
+
+        .module-content {
+          .markdown-content {
+            font-size: 14px;
+
+            :deep(h1) { font-size: 18px; }
+            :deep(h2) { font-size: 16px; }
+            :deep(h3) { font-size: 14px; }
+
+            :deep(table) {
+              display: block;
+              overflow-x: auto;
+              -webkit-overflow-scrolling: touch;
+              font-size: 12px;
+            }
+
+            :deep(pre) {
+              font-size: 12px;
+              padding: 12px;
+              overflow-x: auto;
+            }
+
+            :deep(ul), :deep(ol) {
+              padding-left: 20px;
+            }
+          }
+
+          .json-content pre {
+            font-size: 11px;
+            padding: 12px;
+          }
+        }
+      }
+    }
+
+    // 错误容器移动端适配
+    .error-container {
+      padding: 24px 16px;
+    }
+  }
+}
+
+// ==================== 小屏手机适配 (< 375px) ====================
+@media (max-width: 374px) {
+  .report-detail {
+    .report-content {
+      .report-header {
+        .header-content {
+          .title-section {
+            .report-title {
+              font-size: 16px;
+            }
+          }
+
+          .action-section {
+            .el-button {
+              min-width: 100%;
+              font-size: 13px;
+            }
+          }
+        }
+      }
+
+      .metrics-content {
+        .metric-item {
+          padding: 12px 8px;
+        }
+
+        .confidence-item {
+          .confidence-display {
+            :deep(.el-progress) {
+              width: 80px !important;
+              height: 80px !important;
+            }
+
+            .confidence-text .confidence-number {
+              font-size: 22px;
+            }
+          }
+        }
+
+        .risk-item .risk-display .risk-stars {
+          font-size: 18px;
+        }
+      }
+    }
+  }
+}
+
+// ==================== 平板端适配 (768px - 991px) ====================
+@media (min-width: 768px) and (max-width: 991px) {
+  .report-detail {
+    .report-content {
+      .report-header {
+        .header-content {
+          .title-section {
+            .report-title {
+              font-size: 20px;
+            }
+          }
+        }
+      }
+
+      .metrics-content {
+        .metric-item {
+          padding: 20px 16px;
+        }
+      }
+    }
   }
 }
 </style>

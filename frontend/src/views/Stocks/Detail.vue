@@ -1,15 +1,18 @@
 <template>
   <div class="stock-detail">
     <!-- 顶部：代码 / 名称 / 操作 -->
-    <div class="header">
-      <div class="title">
-        <div class="code">{{ code }}</div>
-        <div class="name">{{ stockName || '-' }}</div>
-        <el-tag size="small">{{ market || '-' }}</el-tag>
+    <div class="page-header">
+      <div class="title-section">
+        <div class="stock-title">
+          <span class="code">{{ code }}</span>
+          <span class="name">{{ stockName || '-' }}</span>
+          <el-tag size="small" :type="getMarketTagType(market)">{{ market || '-' }}</el-tag>
+        </div>
       </div>
       <div class="actions">
-        <el-button @click="onToggleFavorite">
-          <el-icon><Star /></el-icon> {{ isFav ? '已自选' : '加自选' }}
+        <el-button @click="onToggleFavorite" :type="isFav ? 'warning' : 'default'" class="mobile-icon-only">
+          <el-icon><Star /></el-icon>
+          <span class="btn-text">{{ isFav ? '已自选' : '加自选' }}</span>
         </el-button>
         <!-- 🔥 港股和美股不显示"同步数据"按钮 -->
         <el-button
@@ -17,14 +20,18 @@
           type="primary"
           @click="showSyncDialog"
           :loading="syncLoading"
+          class="mobile-hidden"
         >
-          <el-icon><Refresh /></el-icon> 同步数据
+          <el-icon><Refresh /></el-icon>
+          <span class="btn-text">同步数据</span>
         </el-button>
-        <el-button type="warning" @click="clearCache" :loading="clearCacheLoading">
-          <el-icon><Delete /></el-icon> 清除缓存
+        <el-button type="warning" @click="clearCache" :loading="clearCacheLoading" class="mobile-hidden">
+          <el-icon><Delete /></el-icon>
+          <span class="btn-text">清除缓存</span>
         </el-button>
-        <el-button type="success" @click="goPaperTrading">
-          <el-icon><CreditCard /></el-icon> 模拟交易
+        <el-button type="success" @click="goPaperTrading" class="mobile-icon-only">
+          <el-icon><CreditCard /></el-icon>
+          <span class="btn-text">模拟交易</span>
         </el-button>
       </div>
     </div>
@@ -108,7 +115,7 @@
     </el-card>
 
     <el-row :gutter="16" class="body">
-      <el-col :span="18">
+      <el-col :xs="24" :sm="24" :md="18" :lg="18">
         <!-- K线蜡烛图 -->
         <el-card shadow="hover">
           <template #header>
@@ -239,7 +246,7 @@
 
       </el-col>
 
-      <el-col :span="6">
+      <el-col :xs="24" :sm="24" :md="6" :lg="6">
         <!-- 基本面快照 -->
         <el-card shadow="hover">
           <template #header><div class="card-hd">基本面快照</div></template>
@@ -975,6 +982,15 @@ async function fetchLatestAnalysis() {
   }
 }
 
+// 获取市场标签类型
+function getMarketTagType(market: string): string {
+  const m = (market || '').toUpperCase()
+  if (m === 'SH' || m === 'SZ' || m === 'A股') return 'danger'
+  if (m === 'HK' || m === '港股') return 'warning'
+  if (m === 'US' || m === '美股') return 'primary'
+  return 'info'
+}
+
 // 格式化
 function fmtPrice(v: any) { const n = Number(v); return Number.isFinite(n) ? n.toFixed(2) : '-' }
 function fmtPercent(v: any) { const n = Number(v); return Number.isFinite(n) ? `${n>0?'+':''}${n.toFixed(2)}%` : '-' }
@@ -1187,15 +1203,15 @@ function exportReport() {
   display: flex; flex-direction: column; gap: 16px;
 }
 
-.header { display: flex; justify-content: space-between; align-items: center; }
-.title { display: flex; align-items: center; gap: 12px; }
+.header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+.title { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .code { font-size: 22px; font-weight: 700; }
 .name { font-size: 18px; color: var(--el-text-color-regular); }
-.actions { display: flex; gap: 8px; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
 .quote-card { border-radius: 12px; }
 .quote { display: flex; flex-direction: column; gap: 8px; }
-.price-row { display: flex; align-items: center; gap: 12px; }
+.price-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .price { font-size: 32px; font-weight: 800; }
 .change { font-size: 16px; font-weight: 700; }
 .up { color: #e53935; }
@@ -1205,7 +1221,7 @@ function exportReport() {
 .stats .item b { color: var(--el-text-color-primary); font-size: 14px; }
 
 .body { margin-top: 4px; }
-.card-hd { display: flex; align-items: center; justify-content: space-between; }
+.card-hd { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
 .k-chart { height: 320px; }
 .legend { margin-top: 8px; font-size: 12px; color: var(--el-text-color-secondary); }
 
@@ -1235,10 +1251,6 @@ function exportReport() {
 
 .quick-actions { display: flex; flex-direction: column; gap: 8px; }
 
-@media (max-width: 1024px) {
-  .stats { grid-template-columns: repeat(4, 1fr); }
-}
-
 /* 报告相关样式 */
 .reports-section {
   margin-top: 8px;
@@ -1250,6 +1262,8 @@ function exportReport() {
   align-items: center;
   margin-bottom: 16px;
   margin-top: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .reports-title {
@@ -1385,6 +1399,7 @@ function exportReport() {
   border-radius: 6px;
   font-size: 13px;
   color: var(--el-text-color-secondary);
+  flex-wrap: wrap;
 }
 
 .analysis-meta .analysis-time,
@@ -1489,6 +1504,7 @@ function exportReport() {
   border: 1px solid #bae6fd;
   font-size: 13px;
   color: #0369a1;
+  flex-wrap: wrap;
 }
 
 .sync-status .el-icon {
@@ -1501,5 +1517,296 @@ function exportReport() {
   align-items: center;
   gap: 4px;
   flex-wrap: wrap;
+}
+
+// ==================== 移动端响应式样式 ====================
+@media (max-width: 767px) {
+  .stock-detail {
+    gap: 12px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .title {
+      .code {
+        font-size: 18px;
+      }
+
+      .name {
+        font-size: 14px;
+      }
+    }
+
+    .actions {
+      width: 100%;
+      justify-content: flex-start;
+
+      .mobile-hidden {
+        display: none;
+      }
+
+      .mobile-icon-only {
+        .btn-text {
+          display: none;
+        }
+      }
+    }
+  }
+
+  .quote-card {
+    :deep(.el-card__body) {
+      padding: 12px;
+    }
+  }
+
+  .quote {
+    .price-row {
+      .price {
+        font-size: 24px;
+      }
+
+      .change {
+        font-size: 14px;
+      }
+    }
+
+    .stats {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+
+      .item {
+        font-size: 11px;
+
+        b {
+          font-size: 12px;
+        }
+      }
+    }
+
+    .sync-status {
+      font-size: 11px;
+      padding: 6px 10px;
+    }
+  }
+
+  .body {
+    :deep(.el-row) {
+      row-gap: 12px;
+    }
+
+    :deep(.el-col) {
+      margin-bottom: 0;
+    }
+  }
+
+  .k-chart {
+    height: 240px;
+  }
+
+  .legend {
+    font-size: 11px;
+    word-break: break-all;
+  }
+
+  .card-hd {
+    font-size: 14px;
+  }
+
+  // 基本面快照移动端
+  .facts {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+
+    .fact {
+      font-size: 11px;
+
+      b {
+        font-size: 12px;
+      }
+    }
+  }
+
+  // 快捷操作移动端
+  .quick-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+
+    .el-button {
+      flex: 1;
+      min-width: calc(50% - 4px);
+    }
+  }
+
+  // 新闻列表移动端
+  .news-item {
+    padding: 8px 10px;
+
+    .row {
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .left {
+      width: 100%;
+    }
+
+    .right {
+      margin-left: 0;
+      align-self: flex-end;
+    }
+
+    .title {
+      font-size: 13px;
+    }
+
+    .meta {
+      font-size: 11px;
+    }
+  }
+
+  // 分析结果移动端
+  .analysis-detail-card {
+    .analysis-meta {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .recommendation-box {
+      padding: 14px 16px;
+      margin: 12px 0;
+
+      .recommendation-header {
+        font-size: 14px;
+        margin-bottom: 12px;
+      }
+
+      .recommendation-content {
+        padding: 12px 14px;
+      }
+
+      .recommendation-text {
+        font-size: 13px;
+      }
+    }
+
+    .summary-section {
+      padding: 14px 16px;
+
+      .summary-title {
+        font-size: 14px;
+      }
+
+      .summary-text {
+        font-size: 13px;
+      }
+    }
+
+    .reports-header {
+      flex-direction: column;
+      align-items: flex-start;
+
+      .reports-title {
+        font-size: 14px;
+      }
+    }
+
+    .reports-preview {
+      padding: 10px;
+      gap: 8px;
+
+      .report-tag {
+        font-size: 12px;
+        padding: 4px 10px;
+      }
+    }
+  }
+
+  // 对话框移动端
+  :deep(.el-dialog) {
+    width: 95% !important;
+    margin: 2vh auto !important;
+
+    .el-dialog__body {
+      padding: 12px;
+    }
+  }
+
+  .report-content {
+    padding: 12px;
+
+    :deep(.el-scrollbar) {
+      height: 400px !important;
+    }
+  }
+
+  .markdown-body {
+    font-size: 13px;
+
+    h1 { font-size: 18px; }
+    h2 { font-size: 16px; }
+    h3 { font-size: 14px; }
+
+    table {
+      display: block;
+      overflow-x: auto;
+      font-size: 12px;
+    }
+
+    pre {
+      font-size: 11px;
+      padding: 10px;
+    }
+  }
+}
+
+// ==================== 小屏手机适配 (< 375px) ====================
+@media (max-width: 374px) {
+  .header {
+    .title {
+      .code {
+        font-size: 16px;
+      }
+
+      .name {
+        font-size: 13px;
+      }
+    }
+
+    .actions {
+      .el-button {
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+    }
+  }
+
+  .quote {
+    .price-row .price {
+      font-size: 20px;
+    }
+
+    .stats {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .k-chart {
+    height: 200px;
+  }
+}
+
+// ==================== 平板端适配 (768px - 1024px) ====================
+@media (min-width: 768px) and (max-width: 1024px) {
+  .stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .k-chart {
+    height: 280px;
+  }
 }
 </style>

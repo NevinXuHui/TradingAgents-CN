@@ -99,7 +99,8 @@ class DatabaseScreeningService:
         limit: int = 50,
         offset: int = 0,
         order_by: Optional[List[Dict[str, str]]] = None,
-        source: Optional[str] = None
+        source: Optional[str] = None,
+        market: str = "CN"
     ) -> Tuple[List[Dict[str, Any]], int]:
         """
         基于数据库进行股票筛选
@@ -110,13 +111,24 @@ class DatabaseScreeningService:
             offset: 偏移量
             order_by: 排序条件 [{"field": "total_mv", "direction": "desc"}]
             source: 数据源（可选），默认使用优先级最高的数据源
+            market: 市场类型（CN=A股, HK=港股, US=美股）
 
         Returns:
             Tuple[List[Dict], int]: (筛选结果, 总数量)
         """
         try:
             db = get_mongo_db()
-            collection = db[self.collection_name]
+            
+            # 🔥 根据市场类型选择不同的集合
+            market_collection_map = {
+                "CN": self.collection_name,  # A股使用默认视图
+                "HK": "hk_stock_basic_info",  # 港股
+                "US": "us_stock_basic_info",  # 美股
+            }
+            collection_name = market_collection_map.get(market, self.collection_name)
+            collection = db[collection_name]
+            
+            logger.info(f"🔍 [database_screening] 市场: {market}, 使用集合: {collection_name}")
 
             # 🔥 获取数据源优先级配置
             if not source:

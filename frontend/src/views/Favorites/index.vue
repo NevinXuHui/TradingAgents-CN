@@ -12,8 +12,8 @@
 
     <!-- 操作栏 -->
     <el-card class="action-card" shadow="never">
-      <el-row :gutter="16" align="middle" style="margin-bottom: 16px;">
-        <el-col :span="8">
+      <el-row :gutter="12" align="middle" class="filter-row">
+        <el-col :xs="24" :sm="12" :md="8" :lg="8">
           <el-input
             v-model="searchKeyword"
             placeholder="搜索股票代码或名称"
@@ -25,7 +25,7 @@
           </el-input>
         </el-col>
 
-        <el-col :span="4">
+        <el-col :xs="12" :sm="6" :md="4" :lg="4">
           <el-select v-model="selectedMarket" placeholder="市场" clearable>
             <el-option label="A股" value="A股" />
             <el-option label="港股" value="港股" />
@@ -33,7 +33,7 @@
           </el-select>
         </el-col>
 
-        <el-col :span="4">
+        <el-col :xs="12" :sm="6" :md="4" :lg="4" class="mobile-hidden">
           <el-select v-model="selectedBoard" placeholder="板块" clearable>
             <el-option label="主板" value="主板" />
             <el-option label="创业板" value="创业板" />
@@ -42,7 +42,7 @@
           </el-select>
         </el-col>
 
-        <el-col :span="4">
+        <el-col :xs="12" :sm="6" :md="4" :lg="4" class="mobile-hidden">
           <el-select v-model="selectedExchange" placeholder="交易所" clearable>
             <el-option label="上海证券交易所" value="上海证券交易所" />
             <el-option label="深圳证券交易所" value="深圳证券交易所" />
@@ -50,7 +50,7 @@
           </el-select>
         </el-col>
 
-        <el-col :span="4">
+        <el-col :xs="12" :sm="6" :md="4" :lg="4">
           <el-select v-model="selectedTag" placeholder="标签" clearable>
             <el-option
               v-for="tag in userTags"
@@ -62,46 +62,46 @@
         </el-col>
       </el-row>
 
-      <el-row :gutter="16" align="middle">
+      <el-row :gutter="12" align="middle" class="action-row">
         <el-col :span="24">
           <div class="action-buttons">
-            <el-button @click="refreshData">
+            <el-button @click="refreshData" class="mobile-icon-only">
               <el-icon><Refresh /></el-icon>
-              刷新
+              <span class="btn-text">刷新</span>
             </el-button>
-            <!-- 只有有A股自选股时才显示同步实时行情按钮 -->
             <el-button
               v-if="hasAStocks"
               type="success"
               @click="syncAllRealtime"
               :loading="syncRealtimeLoading"
+              class="mobile-icon-only"
             >
               <el-icon><Refresh /></el-icon>
-              同步实时行情
+              <span class="btn-text">同步行情</span>
             </el-button>
-            <!-- 只有选中的股票都是A股时才显示批量同步按钮 -->
             <el-button
               v-if="selectedStocksAreAllAShares"
               type="primary"
               @click="showBatchSyncDialog"
+              class="mobile-hidden"
             >
               <el-icon><Download /></el-icon>
-              批量同步数据
+              <span class="btn-text">批量同步</span>
             </el-button>
-            <el-button @click="openTagManager">
+            <el-button @click="openTagManager" class="mobile-hidden">
               标签管理
             </el-button>
             <el-button type="primary" @click="showAddDialog">
               <el-icon><Plus /></el-icon>
-              添加自选股
+              <span class="btn-text">添加</span>
             </el-button>
           </div>
         </el-col>
       </el-row>
     </el-card>
 
-    <!-- 自选股列表 -->
-    <el-card class="favorites-list-card" shadow="never">
+    <!-- 自选股列表 - 桌面端表格 -->
+    <el-card class="favorites-list-card desktop-table" shadow="never">
       <el-table
         :data="filteredFavorites"
         v-loading="loading"
@@ -221,6 +221,84 @@
         </el-empty>
       </div>
     </el-card>
+
+    <!-- 自选股列表 - 移动端卡片 -->
+    <div class="mobile-card-list" v-loading="loading">
+      <div v-if="filteredFavorites.length === 0 && !loading" class="empty-state">
+        <el-empty description="暂无自选股">
+          <el-button type="primary" @click="showAddDialog">
+            添加第一只自选股
+          </el-button>
+        </el-empty>
+      </div>
+
+      <div
+        v-for="stock in filteredFavorites"
+        :key="stock.stock_code"
+        class="stock-card"
+        @click="viewStockDetail(stock)"
+      >
+        <div class="card-header">
+          <div class="stock-info">
+            <span class="stock-code">{{ stock.stock_code }}</span>
+            <span class="stock-name">{{ stock.stock_name }}</span>
+          </div>
+          <div class="price-info">
+            <span
+              v-if="stock.current_price !== null && stock.current_price !== undefined"
+              class="price"
+            >
+              ¥{{ formatPrice(stock.current_price) }}
+            </span>
+            <span
+              v-if="stock.change_percent !== null && stock.change_percent !== undefined"
+              :class="['change', getChangeClass(stock.change_percent)]"
+            >
+              {{ formatPercent(stock.change_percent) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="card-meta">
+          <div class="meta-left">
+            <el-tag size="small" type="info">{{ stock.market || 'A股' }}</el-tag>
+            <el-tag
+              v-for="tag in (stock.tags || []).slice(0, 2)"
+              :key="tag"
+              size="small"
+              :color="getTagColor(tag)"
+              effect="dark"
+            >
+              {{ tag }}
+            </el-tag>
+          </div>
+          <span class="time">{{ formatDate(stock.added_at) }}</span>
+        </div>
+
+        <div class="card-actions" @click.stop>
+          <el-button size="small" @click="editFavorite(stock)">
+            <el-icon><Edit /></el-icon>
+            编辑
+          </el-button>
+          <el-button
+            v-if="stock.market === 'A股'"
+            size="small"
+            type="primary"
+            @click="showSingleSyncDialog(stock)"
+          >
+            <el-icon><Refresh /></el-icon>
+            同步
+          </el-button>
+          <el-button size="small" type="success" @click="analyzeFavorite(stock)">
+            <el-icon><DataAnalysis /></el-icon>
+            分析
+          </el-button>
+          <el-button size="small" type="danger" plain @click="removeFavorite(stock)">
+            <el-icon><Delete /></el-icon>
+          </el-button>
+        </div>
+      </div>
+    </div>
 
     <!-- 添加自选股对话框 -->
     <el-dialog
@@ -507,7 +585,10 @@ import {
   Search,
   Refresh,
   Plus,
-  Download
+  Download,
+  Edit,
+  Delete,
+  DataAnalysis
 } from '@element-plus/icons-vue'
 import { favoritesApi } from '@/api/favorites'
 import { tagsApi } from '@/api/tags'
@@ -1218,10 +1299,22 @@ onMounted(() => {
   .action-card {
     margin-bottom: 24px;
 
-    .action-buttons {
-      display: flex;
-      gap: 8px;
-      justify-content: flex-end;
+    .filter-row {
+      margin-bottom: 16px;
+
+      :deep(.el-select),
+      :deep(.el-input) {
+        width: 100%;
+      }
+    }
+
+    .action-row {
+      .action-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+      }
     }
   }
 
@@ -1235,12 +1328,14 @@ onMounted(() => {
     margin-left: 8px;
     vertical-align: middle;
   }
+
   .color-option {
     display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%;
   }
+
   .color-dot-preview {
     display: inline-block;
     width: 14px;
@@ -1263,6 +1358,225 @@ onMounted(() => {
 
     .text-green {
       color: #67c23a;
+    }
+  }
+
+  // 移动端卡片列表 - 默认隐藏
+  .mobile-card-list {
+    display: none;
+  }
+}
+
+// ==================== 移动端响应式样式 ====================
+@media (max-width: 767px) {
+  .favorites {
+    .page-header {
+      margin-bottom: 16px;
+
+      .page-title {
+        font-size: 18px;
+      }
+
+      .page-description {
+        font-size: 13px;
+      }
+    }
+
+    .action-card {
+      margin-bottom: 16px;
+
+      :deep(.el-card__body) {
+        padding: 12px;
+      }
+
+      .filter-row {
+        margin-bottom: 12px;
+
+        :deep(.el-row) {
+          row-gap: 10px;
+        }
+      }
+
+      .action-row {
+        .action-buttons {
+          justify-content: flex-start;
+
+          .mobile-icon-only {
+            .btn-text {
+              display: none;
+            }
+          }
+
+          .mobile-hidden {
+            display: none;
+          }
+        }
+      }
+    }
+
+    // 隐藏桌面端表格
+    .desktop-table {
+      display: none;
+    }
+
+    // 显示移动端卡片列表
+    .mobile-card-list {
+      display: block;
+
+      .empty-state {
+        padding: 40px 20px;
+        text-align: center;
+      }
+
+      .stock-card {
+        background: var(--el-bg-color);
+        border: 1px solid var(--el-border-color-light);
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 12px;
+
+        .card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 10px;
+
+          .stock-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+
+            .stock-code {
+              font-size: 16px;
+              font-weight: 600;
+              color: var(--el-color-primary);
+            }
+
+            .stock-name {
+              font-size: 13px;
+              color: var(--el-text-color-regular);
+            }
+          }
+
+          .price-info {
+            text-align: right;
+
+            .price {
+              display: block;
+              font-size: 16px;
+              font-weight: 600;
+              color: var(--el-text-color-primary);
+            }
+
+            .change {
+              display: block;
+              font-size: 13px;
+              margin-top: 2px;
+
+              &.text-red {
+                color: #f56c6c;
+              }
+
+              &.text-green {
+                color: #67c23a;
+              }
+            }
+          }
+        }
+
+        .card-meta {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 12px;
+
+          .meta-left {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+          }
+
+          .time {
+            font-size: 12px;
+            color: var(--el-text-color-placeholder);
+          }
+        }
+
+        .card-actions {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+          padding-top: 12px;
+          border-top: 1px solid var(--el-border-color-lighter);
+
+          .el-button {
+            flex: 1;
+            min-width: calc(25% - 6px);
+            margin: 0;
+          }
+        }
+      }
+    }
+  }
+}
+
+// ==================== 小屏手机适配 (< 375px) ====================
+@media (max-width: 374px) {
+  .favorites {
+    .page-header .page-title {
+      font-size: 16px;
+    }
+
+    .action-card {
+      .action-row .action-buttons {
+        .el-button {
+          padding: 8px 10px;
+          font-size: 12px;
+        }
+      }
+    }
+
+    .mobile-card-list {
+      .stock-card {
+        padding: 12px;
+
+        .card-header {
+          .stock-info .stock-code {
+            font-size: 15px;
+          }
+
+          .price-info .price {
+            font-size: 15px;
+          }
+        }
+
+        .card-actions {
+          .el-button {
+            min-width: calc(50% - 4px);
+            font-size: 12px;
+            padding: 6px 8px;
+          }
+        }
+      }
+    }
+  }
+}
+
+// ==================== 平板端适配 (768px - 991px) ====================
+@media (min-width: 768px) and (max-width: 991px) {
+  .favorites {
+    .action-card {
+      .filter-row {
+        :deep(.el-row) {
+          row-gap: 12px;
+        }
+      }
+    }
+
+    .favorites-list-card {
+      :deep(.el-table) {
+        font-size: 13px;
+      }
     }
   }
 }

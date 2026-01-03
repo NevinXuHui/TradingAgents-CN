@@ -75,7 +75,7 @@ let searchTimer: ReturnType<typeof setTimeout> | null = null
 
 const getPlaceholder = () => {
   const placeholders: Record<string, string> = {
-    CN: '输入股票代码或名称（如：000001 或 平安银行）',
+    CN: '输入代码、名称或拼音缩写（如：000001、平安银行、payh）',
     HK: '输入股票代码或名称（如：00700 或 腾讯）',
     US: '输入股票代码或名称（如：AAPL 或 Apple）'
   }

@@ -62,6 +62,40 @@ class UnifiedStockService:
             }
         }
 
+    @staticmethod
+    def get_pinyin_abbr(chinese_text: str) -> str:
+        """
+        获取中文文本的拼音首字母缩写
+        
+        Args:
+            chinese_text: 中文文本
+        
+        Returns:
+            拼音首字母缩写（小写）
+        """
+        if not PINYIN_AVAILABLE or not chinese_text:
+            return ""
+        try:
+            # 获取每个字的拼音首字母
+            initials = lazy_pinyin(chinese_text, style=Style.FIRST_LETTER)
+            return "".join(initials).lower()
+        except Exception:
+            return ""
+
+    @staticmethod
+    def is_pinyin_query(query: str) -> bool:
+        """
+        判断查询是否为拼音缩写（纯字母且长度合理）
+        
+        Args:
+            query: 搜索关键词
+        
+        Returns:
+            是否为拼音查询
+        """
+        # 纯字母，长度2-10，可能是拼音缩写
+        return bool(re.match(r'^[a-zA-Z]{2,10}$', query))
+
     async def get_stock_info(
         self, 
         market: str, 
@@ -174,6 +208,11 @@ class UnifiedStockService:
         """
         搜索股票（去重，只返回每个股票的最优数据源）
         
+        支持以下搜索方式：
+        1. 股票代码搜索（如：000001、AAPL）
+        2. 股票名称搜索（如：平安银行、Apple）
+        3. 拼音缩写搜索（如：payh -> 平安银行，zgpa -> 中国平安）
+        
         Args:
             market: 市场类型 (CN/HK/US)
             query: 搜索关键词
@@ -184,6 +223,9 @@ class UnifiedStockService:
         """
         collection_name = self.collection_map[market]["basic_info"]
         collection = self.db[collection_name]
+        
+        query_lower = query.lower().strip()
+        is_pinyin = self.is_pinyin_query(query_lower) and market == "CN"  # 拼音搜索主要用于A股
 
         # 支持代码和名称搜索
         filter_query = {
@@ -197,6 +239,38 @@ class UnifiedStockService:
         # 查询所有匹配的记录
         cursor = collection.find(filter_query)
         all_results = await cursor.to_list(length=None)
+        
+        # 如果是拼音查询且常规搜索结果较少，进行拼音匹配
+        if is_pinyin and PINYIN_AVAILABLE and len(all_results) < limit:
+            logger.info(f"🔤 尝试拼音搜索: '{query_lower}'")
+            # 获取所有股票进行拼音匹配（限制数量避免性能问题）
+            all_stocks_cursor = collection.find({}, {"_id": 0, "code": 1, "name": 1, "source": 1})
+            all_stocks = await all_stocks_cursor.to_list(length=10000)
+            
+            existing_codes = {doc.get("code") for doc in all_results}
+            pinyin_matches = []
+            
+            for stock in all_stocks:
+                stock_name = stock.get("name", "")
+                stock_code = stock.get("code", "")
+                
+                if stock_code in existing_codes:
+                    continue
+                    
+                # 获取股票名称的拼音缩写
+                pinyin_abbr = self.get_pinyin_abbr(stock_name)
+                
+                # 匹配：拼音缩写以查询开头，或查询以拼音缩写开头
+                if pinyin_abbr and (pinyin_abbr.startswith(query_lower) or query_lower.startswith(pinyin_abbr)):
+                    # 获取完整的股票信息
+                    full_doc = await collection.find_one({"code": stock_code}, {"_id": 0})
+                    if full_doc:
+                        pinyin_matches.append(full_doc)
+                        existing_codes.add(stock_code)
+            
+            # 合并结果
+            all_results.extend(pinyin_matches)
+            logger.info(f"🔤 拼音搜索找到 {len(pinyin_matches)} 条额外结果")
         
         if not all_results:
             return []
